@@ -1,0 +1,8 @@
+# Data should not be version controlled
+data/*
+
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
