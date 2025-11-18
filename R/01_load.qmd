@@ -3,3 +3,34 @@ title: "01_load"
 format: html
 ---
 
+```{r}
+#load libraries
+library("readxl")
+library("tidyverse")
+library("here")
+library("purrr")
+```
+
+```{r}
+# Dynamically load the Excel file with library here
+raw_file_path <- here("data", "_raw", "AP_cohort_COVID_1_raw.xlsx")
+sheets <- excel_sheets(raw_file_path)
+
+
+sheet_list <- map(sheets, 
+                  ~ read_xlsx(raw_file_path, 
+                              sheet = .x))
+names(sheet_list) <- sheets
+```
+
+```{r}
+#create tsvs from nested tibble
+dir.create("data/sheets_tsv")
+out_dir <- here("data", "sheets_tsv")
+
+imap(sheet_list, 
+     function(df, sheet_name) {
+  out_file <- here(out_dir, paste0(sheet_name, ".tsv"))
+  write_tsv(df, out_file)
+})
+```
