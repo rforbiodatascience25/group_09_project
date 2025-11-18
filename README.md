@@ -1,9 +1,9 @@
-Group09:
-Selina Friesen - s252027
-Marta Sanchez Sanchez - 
-Sergi Fornos - 
-Tommaso Ballocci -
-Ivan Musalyk - 
+Group09:  
+Selina Friesen - s252027  
+Marta Sanchez Sanchez -   
+Sergi Fornos -   
+Tommaso Ballocci -  
+Ivan Musalyk -   
 
 ## Project Overview
 This repository implements the required R4BDS project structure.
