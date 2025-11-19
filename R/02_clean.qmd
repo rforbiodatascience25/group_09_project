@@ -102,6 +102,12 @@ combined_data_new <- subset_data |>
     sep = "_"  )|>
   select(-ending)|>
   mutate(
+    #Regex pattern: ^ start
+    # [A-Z]: uppercaseLetters
+    #(): what to extract
+    # \d: digits, {2}: exactly 2
+    #\\d two more digits in name
+    #$ end of string
     patient_id = str_match(sample, "^[A-Z]+(\\d{2})\\d{2}$")[, 2]
   )|>
   select(
