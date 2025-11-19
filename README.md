@@ -1,10 +1,8 @@
 Group09:\
 Selina Friesen - s252027\
-Marta Sanchez Sanchez - s254791
-
-\
+Marta Sanchez Sanchez - s254791\
 Sergi Fornos -\
-Tommaso Ballocci -\
+Tommaso Ballocci - s257151\
 Ivan Musalyk -
 
 ## Project Overview
