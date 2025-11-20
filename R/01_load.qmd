@@ -17,76 +17,136 @@ library(here)
 ```
 
 ```{r}
-# Dynamically load the Excel file with "here"
+# Path to the raw Excel file
 raw_file_path <- here("data", "_raw", "AP_cohort_COVID_1_raw.xlsx")
 sheets <- excel_sheets(raw_file_path)
 
-
+#Get a vector of sheet names (one per patient/sample)
 sheet_list <- map(sheets, 
                   ~ read_xlsx(raw_file_path, 
                               sheet = .x))
 names(sheet_list) <- sheets
 ```
 
+------------------------------------------------------------------------
+
+## Export each Excel sheet as a TSV
+
+Here we read each sheet and save it as its own `.tsv` file.\
+
+This is mainly for transparency / debugging: you can open a single TSV if something looks odd.
+
 ```{r}
 #create tsv-files from nested tibble
-dir.create("data/sheets_tsv")
+
+# Directory where we will save all sheet-wise TSV files
+
 out_dir <- here("data", "sheets_tsv")
 
-imap(sheet_list, 
-     function(df, sheet_name) {
-  out_file <- here(out_dir, paste0(sheet_name, ".tsv"))
-  write_tsv(df, out_file)
-})
+# Create the directory if it doesn't already exist
+
+dir.create(out_dir, showWarnings = FALSE)
+
+# Read each sheet and write it to a .tsv with the same name as the sheet
+
+sheet_list <- map(sheets, ~ read_xlsx(raw_file_path, sheet = .x))
+names(sheet_list) <- sheets
+
+# Write each sheet to its own TSV file
+
+imap(
+sheet_list,
+function(df, sheet_name) {
+out_file <- here(out_dir, paste0(sheet_name, ".tsv"))
+write_tsv(df, out_file)
+}
+)
+
 ```
 
+At this point we should have a folder data/sheets_tsv/ with one TSV per sheet.
+
+------------------------------------------------------------------------
+
+## Extract multimer frequencies from each sheet
+
+The experimental multimer frequency (from FACS) is stored in column AG, row 7 on each sheet. We read that cell for each sheet, clean it, and put everything in one tibble.
+
+We also guard against:
+
+Sheets that do not have AG7 → we return NA for those.
+
 ```{r}
-#Extract multimer frequencies (AG7 per sheet)
+# Helper function to get multimer frequency from cell AG7 on a given sheet
 
 get_multimer_freq <- function(sh) {
-  # Try reading the single cell AG7 for this sheet
-  cell_tbl <- tryCatch(
-    read_xlsx(
-      raw_file_path,
-      sheet = sh,
-      range = "AG7",
-      col_names = FALSE
-    ),
-    error = function(e) {
-      # If the sheet doesn't have that range at all, return empty tibble
-      tibble()
-    }
-  )
-  
-  # If there are no columns, AG7 doesn't exist on this sheet
-  if (ncol(cell_tbl) == 0) {
-    mf_val <- NA_real_
-  } else {
-    raw_val <- cell_tbl |> pull(1)
-    
-    # Clean value: remove % sign and whitespace, then convert to numeric
-    cleaned <- raw_val |>
-      str_replace_all("%", "") |>
-      str_trim()
-    
-    mf_val <- suppressWarnings(as.numeric(cleaned))
-  }
-  
-  tibble(
-    sheet = sh,
-    multimer_frequency = mf_val
-  )
+
+# Try to read cell AG7 from the sheet
+
+cell_tbl <- tryCatch(
+read_xlsx(
+raw_file_path,
+sheet = sh,
+range = "AG7",
+col_names = FALSE
+),
+error = function(e) {
+# If AG7 doesn't exist for this sheet, return an empty tibble
+tibble()
+}
+)
+
+# If AG7 is outside the sheet (no columns), set NA
+
+if (ncol(cell_tbl) == 0) {
+mf_val <- NA_real_
+} else {
+raw_val <- cell_tbl |> pull(1)
+
+# Remove percent signs and whitespace, then coerce to numeric
+cleaned <- raw_val |>
+  stringr::str_replace_all("%", "") |>
+  stringr::str_trim()
+
+mf_val <- suppressWarnings(as.numeric(cleaned))
+
 }
 
+tibble(
+sheet = sh,
+multimer_frequency = mf_val
+)
+}
+
+# Apply to all sheets
+
 multimer_freq_df <- map_dfr(sheets, get_multimer_freq)
+
 multimer_freq_df
+
 ```
 
-### Read TSVs and keep only needed columns
+You should see one row per sheet, and NA only where no multimer frequency is available.
+
+------------------------------------------------------------------------
+
+## Load all TSVs and stack them (also filter columns)
+
+Now we read all the exported TSV files back in and combine them into a single tibble.
+
+We also:
+
+-   Add a sheet column based on the file name.
+
+-   Ensure we always have a sample column (if it's missing, we use the sheet name).
+
+-   keep ONLY the columns we care about
 
 ```{r}
+#List all .tsv files we just wrote
 tsv_files <- list.files(out_dir, pattern = "\\.tsv$", full.names = TRUE)
 
+#Helper: extract sheet name from file path (strip directory + .tsv)
 get_sheet_name <- function(path) {
   basename(path) |> str_remove("\\.tsv$")
 }
@@ -101,6 +161,7 @@ all_peptides <- map_dfr(tsv_files, function(f) {
       sheet  = sheet_name,
       sample = if ("sample" %in% names(df)) sample else sheet_name
     ) |>
+    
     # keep ONLY the columns you care about
     select(
       sheet,
@@ -116,9 +177,14 @@ all_peptides <- map_dfr(tsv_files, function(f) {
       ))
     )
 })
+
+#quick look:
+all_peptides
 ```
 
-### Join multimer frequency per sheet
+## Join multimer frequencies to peptide table
+
+We now attach the per-sheet `multimer_frequency` to every peptide row via the `sheet` variable.
 
 ```{r}
 peptides_with_mf <- all_peptides |>
@@ -126,7 +192,23 @@ peptides_with_mf <- all_peptides |>
 
 ```
 
-### Create HLA_Peptide, Response, and Est.frequency
+------------------------------------------------------------------------
+
+## Create helper variables: HLA_Peptide, Response, Est.frequency
+
+We now create the derived variables needed for analysis:
+
+-   `HLA_Peptide`: concatenation of HLA allele and peptide sequence.
+
+-   `Response`: TRUE if
+
+    -   `log_fold_change > 2`
+
+    -   `p < 0.05.`
+
+-   `Est.frequency`: estimated frequency of each responding peptide-specific T cell population within the total response for that sample:
+
+    (Only defined for rows where `Response == TRUE`. Non-responders get `NA`.)
 
 ```{r}
 peptides_final <- peptides_with_mf |>
@@ -156,29 +238,64 @@ peptides_final <- peptides_with_mf |>
 
 ```
 
-### Final selection and save
+We expect:
+
+-   `Response` mostly FALSE (most peptides do not respond).
+
+-   `Est.frequency` is only non-NA for rows where Response == TRUE.
 
 ```{r}
-peptides_out <- peptides_final |>
-  select(
-    sample,
-    count.1,
-    `input.1`, `input.2`, `input.3`,
-    log_fold_change,
-    p,
-    HLA,
-    Protein,
-    Peptide,
-    HLA_Peptide,
-    Response,
-    Est.frequency
-  )
+# How many responses vs non-responses?
 
-dir.create(here("data", "clean"), showWarnings = FALSE)
+peptides_final |>
+count(Response)
+
+# Look at some responding peptides
+
+peptides_final |>
+filter(Response) |>
+select(sample, HLA, Peptide, count.1, log_fold_change, p, multimer_frequency, Est.frequency) |>
+head(20)
+
+```
+
+------------------------------------------------------------------------
+
+## Save final combined dataset
+
+Finally, we save the combined, augmented dataset as a TSV.\
+
+We keep only the columns that are relevant for later steps.
+
+```{r}
+# Select and order columns for output
+
+peptides_out <- peptides_final |>
+select(
+sample,
+count.1,
+input.1, input.2, input.3,
+log_fold_change,
+p,
+HLA,
+Protein,
+Peptide,
+HLA_Peptide,
+Response,
+Est.frequency
+)
+
+# Create a "clean" directory if needed
+
+clean_dir <- here("data", "clean")
+dir.create(clean_dir, showWarnings = FALSE)
+
+# Write master peptide table
 
 write_tsv(
-  peptides_out,
-  here("data", "clean", "peptides_master.tsv")
+peptides_out,
+file = here("data", "clean", "peptides_master.tsv")
 )
+
 
 ```
