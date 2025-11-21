@@ -7,3 +7,56 @@ format: html
 # First main analysis
 # e.g. immunodominance landscape similar to Fig. 1E
 ```
+
+Libraries
+
+```{r}
+library("here")
+library("tidyverse")
+```
+
+```{r}
+source("99_proj_func.R")
+```
+
+Load data
+
+```{r}
+experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
+```
+
+# Plot 1E
+
+```{r}
+
+```
+
+# Plot 1F
+
+```{r}
+
+```
+
+# Plot 1G
+
+```{r}
+
+```
+
+# Plot 1H
+
+```{r}
+
+```
+
+# Plot 1I
+
+```{r}
+
+```
+
+# Plot 2A - funny plot
+
+```{r}
+
+```
