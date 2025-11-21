@@ -8,3 +8,127 @@ format: html
 # Clean and convert to tidy format
 # Save as data/02_dat_clean.tsv
 ```
+
+```{r}
+#| warning: false
+library("tidyverse")
+library("here")
+```
+
+Create a combined tsv
+
+```{r}
+#| warning: false
+
+file_path <- here("data", "sheets_tsv")
+
+patients <- list.files(
+  path = file_path,
+  full.names = TRUE)
+
+
+
+#define correct interpretation of column which raised error
+col_spec <- cols(
+    `-log10(masked_p)` = col_double()
+)
+
+
+#vertically stacking as each patient has same cols
+combined_data <- patients |>
+  map_dfr(
+    .f = ~ read_tsv(
+        file = .x,
+        col_types = col_spec, 
+        na = c("NA", "N/A", "---")
+    )
+  )
+
+combined_data
+```
+
+Extract PE+ Population = Multimer Frequency
+
+```{r}
+combined_data <- combined_data |>
+  group_by(sample)|>
+  rename(freq= ...33)|>
+  mutate(
+    MulitmerFrequency = sum(replace_na(freq, 0))
+  )|>
+  ungroup()
+
+
+combined_data
+```
+
+Drop last row per patient
+
+```{r}
+ combined_data <- combined_data |>
+  drop_na(barcode)
+ 
+ combined_data
+```
+
+Keep only important columns
+
+```{r}
+subset_data <-combined_data |>
+  select(
+    c("sample", 
+      "count.1", 
+      "input.1", 
+      "input.2", 
+      "input.3", 
+      "log_fold_change", 
+      "p", 
+      "HLA", 
+      "Protein", 
+      "Peptide",
+      "MulitmerFrequency")
+  )
+
+subset_data
+```
+
+Extract patient number
+
+```{r}
+combined_data_new <- subset_data |>
+  mutate(
+    sampleID = str_remove(sample, "_.*$"),
+    sampleID = str_sub(sampleID, start = 3, end = 4))|>
+  relocate(sampleID)
+
+
+combined_data_new
+```
+
+Clean HLA
+
+```{r}
+combined_data_new <- combined_data_new |>
+  mutate(
+    HLA = str_remove(HLA, "HLA-")
+  )
+```
+
+Extract gene
+
+```{r}
+combined_data_new <- combined_data_new |>
+  separate_wider_delim(Protein, "_", names= c("genome", "weird1", "Protein", "extra"), too_few ="align_start" )|>
+  select(-weird1, -extra, -genome)
+
+combined_data_new
+
+```
+
+Save cleaned data as tsv
+
+```{r}
+file_path <- here("data", "02_data_clean.tsv")
+
+write_tsv(combined_data_new, file = file_path)
+```
