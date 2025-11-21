@@ -104,3 +104,11 @@ combined_data_new <- subset_data |>
 
 combined_data_new
 ```
+
+Save cleaned data as tsv
+
+```{r}
+file_path <- here("data", "02_data_clean.tsv")
+
+write_tsv(combined_data_new, file = file_path)
+```
