@@ -54,7 +54,7 @@ combined_data <- combined_data |>
   group_by(sample)|>
   rename(freq= ...33)|>
   mutate(
-    MulitmerFrequency = sum(replace_na(freq, 0))
+    MultimerFrequency = sum(replace_na(freq, 0))
   )|>
   ungroup()
 
@@ -86,7 +86,7 @@ subset_data <-combined_data |>
       "HLA", 
       "Protein", 
       "Peptide",
-      "MulitmerFrequency")
+      "MultimerFrequency")
   )
 
 subset_data

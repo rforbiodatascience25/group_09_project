@@ -54,7 +54,7 @@ complete_data <- combined_data_new |>
   ungroup()|>
   mutate(estimatedFrequency = case_when(ResponseCount == 0 ~ 0,       
                                         response == 1 ~ 
-                                          (count.1 / ResponseCount)*MulitmerFrequency,
+                                          (count.1 / ResponseCount)*MultimerFrequency,
                                         TRUE ~ 0))  
 complete_data
 ```
