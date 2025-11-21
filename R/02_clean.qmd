@@ -105,6 +105,26 @@ combined_data_new <- subset_data |>
 combined_data_new
 ```
 
+Clean HLA
+
+```{r}
+combined_data_new <- combined_data_new |>
+  mutate(
+    HLA = str_remove(HLA, "HLA-")
+  )
+```
+
+Extract gene
+
+```{r}
+combined_data_new <- combined_data_new |>
+  separate_wider_delim(Protein, "_", names= c("genome", "weird1", "Protein", "extra"), too_few ="align_start" )|>
+  select(-weird1, -extra, -genome)
+
+combined_data_new
+
+```
+
 Save cleaned data as tsv
 
 ```{r}
