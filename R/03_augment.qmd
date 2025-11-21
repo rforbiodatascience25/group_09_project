@@ -69,3 +69,11 @@ complete_data <- complete_data |>
 
 complete_data
 ```
+
+Write 03 file
+
+```{r}
+file_path <- here("data", "03_data_augment.tsv")
+
+write_tsv(complete_data, file = file_path)
+```
