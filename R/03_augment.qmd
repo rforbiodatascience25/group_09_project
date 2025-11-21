@@ -15,12 +15,21 @@ library("tidyverse")
 library("here")
 ```
 
+```{r}
+source("99_proj_func.R")
+```
+
 Load data
 
 ```{r}
-path = here("data", "02_data_clean.tsv")
+path <- here("data", "02_data_clean.tsv")
 combined_data_new <- read_tsv(file = path, show_col_types = FALSE)
 
+combined_data_new
+```
+
+```{r}
+combined_data_new <- load_tsvData("02_data_clean.tsv", show_col_types = FALSE)
 combined_data_new
 ```
 
@@ -73,7 +82,5 @@ complete_data
 Write 03 file
 
 ```{r}
-file_path <- here("data", "03_data_augment.tsv")
-
-write_tsv(complete_data, file = file_path)
+save_tsvData(complete_data, "03_data_augment.tsv")
 ```

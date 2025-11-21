@@ -15,6 +15,10 @@ library("tidyverse")
 library("here")
 ```
 
+```{r}
+source("99_proj_func.R")
+```
+
 Create a combined tsv
 
 ```{r}
@@ -23,8 +27,7 @@ Create a combined tsv
 file_path <- here("data", "sheets_tsv")
 
 patients <- list.files(
-  path = file_path,
-  full.names = TRUE)
+  path = file_path)
 
 
 
@@ -37,11 +40,10 @@ col_spec <- cols(
 #vertically stacking as each patient has same cols
 combined_data <- patients |>
   map_dfr(
-    .f = ~ read_tsv(
-        file = .x,
-        col_types = col_spec, 
-        na = c("NA", "N/A", "---")
-    )
+    load_tsvData,
+    folder = file_path,
+    col_types = col_spec,
+    na = c("NA", "N/A", "---")
   )
 
 combined_data
@@ -128,7 +130,6 @@ combined_data_new
 Save cleaned data as tsv
 
 ```{r}
-file_path <- here("data", "02_data_clean.tsv")
 
-write_tsv(combined_data_new, file = file_path)
+save_tsvData(combined_data_new, "02_data_clean.tsv")
 ```
