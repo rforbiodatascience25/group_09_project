@@ -27,7 +27,7 @@ names(sheet_list) <- sheets
 
 ```{r}
 #create tsv-files from nested tibble
-dir.create("data/sheets_tsv")
+dir.create(here("data","sheets_tsv"))
 out_dir <- here("data", "sheets_tsv")
 
 imap(sheet_list, 
