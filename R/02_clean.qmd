@@ -10,6 +10,7 @@ format: html
 ```
 
 ```{r}
+#| warning: false
 library("tidyverse")
 library("here")
 ```
@@ -21,14 +22,10 @@ Create a combined tsv
 
 file_path <- here("data", "sheets_tsv")
 
-participants <- list.files(
+patients <- list.files(
   path = file_path,
   full.names = TRUE)
 
-
-
-file_names <- basename(participants)
-names(participants) <- file_names
 
 
 #define correct interpretation of column which raised error
@@ -38,14 +35,13 @@ col_spec <- cols(
 
 
 #vertically stacking as each patient has same cols
-combined_data <- participants |>
+combined_data <- patients |>
   map_dfr(
     .f = ~ read_tsv(
         file = .x,
         col_types = col_spec, 
         na = c("NA", "N/A", "---")
-    ),
-    .id = "patient_sample"
+    )
   )
 
 combined_data
@@ -66,11 +62,13 @@ combined_data <- combined_data |>
 combined_data
 ```
 
-Drop last row (only contains summary statistics)
+Drop last row per patient
 
 ```{r}
-combined_data <- combined_data |>
-  slice(-n())
+ combined_data <- combined_data |>
+  drop_na(barcode)
+ 
+ combined_data
 ```
 
 Keep only important columns
@@ -90,85 +88,19 @@ subset_data <-combined_data |>
       "Peptide",
       "MulitmerFrequency")
   )
+
+subset_data
 ```
 
 Extract patient number
 
 ```{r}
 combined_data_new <- subset_data |>
-  separate(
-    col = sample,
-    into = c("sample", "ending"),
-    sep = "_"  )|>
-  select(-ending)|>
   mutate(
-    #Regex pattern: ^ start
-    # [A-Z]: uppercaseLetters
-    #(): what to extract
-    # \d: digits, {2}: exactly 2
-    #\\d two more digits in name
-    #$ end of string
-    patient_id = str_match(sample, "^[A-Z]+(\\d{2})\\d{2}$")[, 2]
-  )|>
-  select(
-    last_col(),
-    everything() 
-  )
+    sampleID = str_remove(sample, "_.*$"),
+    sampleID = str_sub(sampleID, start = 3, end = 4))|>
+  relocate(sampleID)
 
 
 combined_data_new
-```
-
-IS THIS ALREADY WRANGLING???
-
-Create new columns
-
-HLA-peptides (HLA-peptide combination)
-
-```{r}
-combined_data_new <- combined_data_new |>
-  mutate(
-    'HLA-peptide' = paste(HLA, Peptide)
-  )
-combined_data_new
-```
-
-Identify response by log_fold_change and p-value
-
-```{r}
-combined_data_new <- combined_data_new |>
-  mutate(
-    response = if_else(
-      (log_fold_change > 2.0 & p < 0.05),
-      1,
-      0)
-    )
-combined_data_new
-```
-
-Estimated Frequency (based on the authors:
-
--   count.1 / (sum of count.1 for Responses) \* multimer Frequency
-
-```{r}
-complete_data <- combined_data_new |>
-  group_by(patient_id)|>
-  mutate(
-    ResponseCount = sum(if_else(response == 1,
-                                count.1, 
-                                0
-                                )
-                        )
-    )|>
-  ungroup()|>
-  mutate(
-    estimatedFrequency = case_when(
-      ResponseCount == 0 ~ 0,
-      response == 1 ~ (replace_na(count.1, 0) / ResponseCount) * MulitmerFrequency,
-      TRUE ~ 0
-    )
-      
-  )
-
-complete_data
 ```
