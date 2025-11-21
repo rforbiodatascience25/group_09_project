@@ -10,7 +10,6 @@ format: html
 ```
 
 ```{r}
-{r}
 #| warning: false
 library("tidyverse")
 library("here")
