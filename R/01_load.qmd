@@ -77,50 +77,43 @@ We also guard against:
 Sheets that do not have AG7 → we return NA for those.
 
 ```{r}
-# Helper function to get multimer frequency from cell AG7 on a given sheet
+multimer_freq_df <- map_dfr(
+  sheets,
+  function(sh) {
+    # Try to read cell AG7 from the sheet
+    cell_tbl <- tryCatch(
+      read_xlsx(
+        raw_file_path,
+        sheet = sh,
+        range = "AG7",
+        col_names = FALSE
+      ),
+      error = function(e) {
+        # If AG7 doesn't exist for this sheet, return an empty tibble
+        tibble()
+      }
+    )
 
-get_multimer_freq <- function(sh) {
+    # If AG7 is outside the sheet (no columns), set NA
+    if (ncol(cell_tbl) == 0) {
+      mf_val <- NA_real_
+    } else {
+      raw_val <- cell_tbl |> pull(1)
 
-# Try to read cell AG7 from the sheet
+      # Remove percent signs and whitespace, then coerce to numeric
+      cleaned <- raw_val |>
+        stringr::str_replace_all("%", "") |>
+        stringr::str_trim()
 
-cell_tbl <- tryCatch(
-read_xlsx(
-raw_file_path,
-sheet = sh,
-range = "AG7",
-col_names = FALSE
-),
-error = function(e) {
-# If AG7 doesn't exist for this sheet, return an empty tibble
-tibble()
-}
+      mf_val <- suppressWarnings(as.numeric(cleaned))
+    }
+
+    tibble(
+      sheet = sh,
+      multimer_frequency = mf_val
+    )
+  }
 )
-
-# If AG7 is outside the sheet (no columns), set NA
-
-if (ncol(cell_tbl) == 0) {
-mf_val <- NA_real_
-} else {
-raw_val <- cell_tbl |> pull(1)
-
-# Remove percent signs and whitespace, then coerce to numeric
-cleaned <- raw_val |>
-  stringr::str_replace_all("%", "") |>
-  stringr::str_trim()
-
-mf_val <- suppressWarnings(as.numeric(cleaned))
-
-}
-
-tibble(
-sheet = sh,
-multimer_frequency = mf_val
-)
-}
-
-# Apply to all sheets
-
-multimer_freq_df <- map_dfr(sheets, get_multimer_freq)
 
 multimer_freq_df
 
@@ -143,43 +136,44 @@ We also:
 -   keep ONLY the columns we care about
 
 ```{r}
-#List all .tsv files we just wrote
+# List all .tsv files we just wrote
 tsv_files <- list.files(out_dir, pattern = "\\.tsv$", full.names = TRUE)
 
-#Helper: extract sheet name from file path (strip directory + .tsv)
-get_sheet_name <- function(path) {
-  basename(path) |> str_remove("\\.tsv$")
-}
+all_peptides <- map_dfr(
+  tsv_files,
+  function(f) {
+    df <- read_tsv(f, show_col_types = FALSE)
 
-all_peptides <- map_dfr(tsv_files, function(f) {
-  df <- read_tsv(f, show_col_types = FALSE)
-  sheet_name <- get_sheet_name(f)
-  
-  df |>
-    # make sure we always have a sample + sheet column
-    mutate(
-      sheet  = sheet_name,
-      sample = if ("sample" %in% names(df)) sample else sheet_name
-    ) |>
-    
-    # keep ONLY the columns you care about
-    select(
-      sheet,
-      sample,
-      any_of(c(
-        "count.1",
-        "input.1", "input.2", "input.3",
-        "log_fold_change",
-        "p",
-        "HLA",
-        "Protein",
-        "Peptide"
-      ))
-    )
-})
+    # Inline sheet name extraction:
+    sheet_name <- f |>
+      basename() |>
+      stringr::str_remove("\\.tsv$")
 
-#quick look:
+    df |>
+      mutate(
+        sheet  = sheet_name,
+        
+        # ensure sample column always exists
+        sample = if ("sample" %in% names(df)) sample else sheet_name
+      ) |>
+      select(
+        sheet,
+        sample,
+        any_of(c(
+          "count.1",
+          "input.1", "input.2", "input.3",
+          "log_fold_change",
+          "p",
+          "HLA",
+          "Protein",
+          "Peptide"
+        ))
+      )
+  }
+)
+
 all_peptides
+
 ```
 
 ## Join multimer frequencies to peptide table
@@ -215,19 +209,21 @@ peptides_final <- peptides_with_mf |>
   mutate(
     # HLA–peptide combo
     HLA_Peptide = paste(HLA, Peptide, sep = "_"),
-    
-    # Response flag: log_fold_change > 2 and p < 0.05
+
+    # Logical response flag
     Response = log_fold_change > 2 & p < 0.05,
-    mutate(Response = if_else(Response, 1L, 0L))
+
+    # Convert to 0/1 *after* creating logical version
+    Response = if_else(Response, 1L, 0L)
   ) |>
   group_by(sample) |>
   mutate(
     # sum of count.1 only among responses within each sample
-    total_count_responses = sum(count.1[Response], na.rm = TRUE),
-    
-    # Est.frequency = count.1 / sum(count.1 for responses) * multimer_frequency
+    total_count_responses = sum(count.1[Response == 1], na.rm = TRUE),
+
+    # Est.frequency only for responses
     Est.frequency = if_else(
-      Response &
+      Response == 1 &
         total_count_responses > 0 &
         !is.na(multimer_frequency),
       count.1 / total_count_responses * multimer_frequency,
@@ -299,3 +295,5 @@ file = here("data", "clean", "peptides_master.tsv")
 
 
 ```
+
+### Change patient ID
