@@ -50,14 +50,16 @@ col_spec <- cols(
 # Load and combine all patient TSVs into one data frame --------------------
 combined_data <- patient_files |>
   map_dfr(
-    load_tsvData,
-    folder   = tsv_folder,
-    col_types = col_spec,
-    na       = c("NA", "N/A", "---")
+    ~ read_tsv(
+        file = file.path(tsv_folder, .x),
+        col_types = col_spec,
+        na = c("NA", "N/A", "---"),
+        show_col_types = FALSE
+      )
   )
 
 # Optional: inspect combined data
-# combined_data
+combined_data
 ```
 
 Extract PE+ Population = Multimer Frequency
@@ -178,5 +180,5 @@ Save cleaned data as tsv
 
 ```{r}
 # Save cleaned data as TSV -------------------------------------------------
-save_tsvData(clean_data, "02_dat_clean.tsv")
+write_tsv(clean_data, here("data", "02_dat_clean.tsv"))
 ```

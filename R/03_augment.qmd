@@ -122,5 +122,5 @@ Write 03_dat_aug file
 
 ```{r}
 # Save augmented data -------------------------------------------------------
-save_tsvData(aug_data, "03_dat_aug.tsv")
+write_tsv(aug_data, here("data", "03_dat_aug.tsv"))
 ```
