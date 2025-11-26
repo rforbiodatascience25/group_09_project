@@ -11,29 +11,36 @@ format: html
 ## Load the libraries
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-library(ggbreak)
-library(ggforce)
+library(dplyr) # better load tidyverse, already included there
+library(ggplot2) # better load tidyverse, already included there
+#library(ggbreak)
+#library(ggforce)
 
 ```
-
-## Graph
 
 ```{r}
-complete_data |> 
-  colnames()
+library("here")
+library("tidyverse")
+library("patchwork")
 ```
+
+```{r}
+source("99_proj_func.R")
+```
+
+## Load data
+
+```{r}
+experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
+```
+
+# Plot 1E
 
 ```{r}
 #goodone
-library(dplyr)
-library(ggplot2)
-library(ggbreak)
-library(ggforce)
 
 #we need to do it in clean
-complete_data <- complete_data |>
+complete_data <- experiment_data |>
   mutate(Protein = str_to_upper(Protein))
   
 
@@ -72,7 +79,7 @@ extras <- complete_data |>
   scale_color_identity(guide = "none") +   
   scale_fill_identity(guide = "none") +
   scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
-  scale_y_break(breaks = c(0, 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
  theme(
   panel.spacing = unit(0, "lines"),  
   panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
@@ -96,143 +103,7 @@ extras <- complete_data |>
 
 ```
 
-```{r}
-#goodone
-library(dplyr)
-library(ggplot2)
-library(ggbreak)
-library(ggforce)
-
-#we need to do it in clean
-complete_data <- complete_data |>
-  mutate(Protein = str_to_upper(Protein))
-  
-
-protein_colors <- c(
-  "ORF1" = "#1f77b4",
-  "S" = "#ff7f0e",  
-   "ORF3"= "#2ca02c",
-  "ORF6" = "pink",
-  "ORF7" = "red",
-  "ORF8" = "lightblue",
-  "ORF10" = "yellow",
-  "E" = "purple",
-  "M" = "darkblue",
-  "N" = "darkred"
-)
-
-extras <- complete_data |>
-  mutate(
-    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
-    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
-    HLA = factor(HLA, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
-  
-  
-  extras |> 
-    ggplot(aes(
-    x = `HLA-peptide`,
-    y = log_fold_change,
-    colour = point_color,
-    fill   = point_fill,
-    size = estimatedFrequency
-  )) +
-  geom_point() +
-
-  facet_grid(~ Protein, scales = "free_x", space = "free") +
-  geom_hline(yintercept = 2, linetype = "dashed") +
-  scale_color_identity(guide = "none") +   
-  scale_fill_identity(guide = "none") +
-  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
-  scale_y_break(breaks = c(0, 2)) +
- theme(
-  panel.spacing = unit(0, "lines"),  
-  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
-  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
-  legend.position = "bottom",
-   axis.text.y.right = element_blank(),
-  axis.ticks.y.right = element_blank(),
-  strip.background = element_blank(),
-  axis.text.x = element_blank(),
-  axis.text.y.left = element_text(size = 12),
-  title = element_text(size = 16),
-    legend.title = element_text(size = 10)
-
-   ) +
-
-  labs(title = "Protein",
-       x = "Peptide HLA pairs",
-       y = "Log fold change",
-       size = "Estimated frequency"
-) 
-```{r}
-#| warning: true
-library("tidyverse")
-library("here")
-library("paletteer") #remove this package
-library("forcats") #same
-```
-
-## Figure 1I - frequency of epitopes across proteins of origin
-
-It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
-
-```{r}
-#| title: "total estimated frequency per patient"
-
-path = here("data", "03_data_augment.tsv")
-augmented_data <- read_tsv(file = path, show_col_types = FALSE)
-
-augmented_data <- augmented_data |>
-  mutate ( estimatedFrequency = estimatedFrequency*100, #converts into percentage
-           total_estimated_frequency = total_estimated_frequency*100,
-  sampleID = fct_reorder(sampleID, total_estimated_frequency)) |> #reorders based on value of second argument
-  arrange(desc(total_estimated_frequency))
-
-```
-
-```{r}
-#| out-width: 100%
-#| fig-width: 10
-palette10 <- c(
-  "#E69F00", "#56B4E9", "#009E73","#00AFAA", "#0072B2","#D55E00", "#CC79A7", "#F0E442","#0099BB", "#5A61FF")
-
-ggplot(augmented_data,
-       aes(x = estimatedFrequency, y = sampleID, fill = Protein)) +
-  geom_col( position = "stack") +
-  scale_fill_manual(values  = palette10) +
-  scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
-  labs( x = "SARS-CoV-2 reactive CD8 T cells (%)", y = "Samples", title = "Frequency of SARS-CoV-2 reactive CD8 T cells in patients with COVID19, distributed across protein of origin")
-```
-
-As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1). However, we can perform some normalization to calculate the percentage of immunogenic peptides that arise from each gene. (Selina's figures).
-Libraries
-
-```{r}
-library("here")
-library("tidyverse")
-```
-
-```{r}
-source("99_proj_func.R")
-```
-
-Load data
-
-```{r}
-experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
-```
-
-# Plot 1E
-
-```{r}
-
-```
-
 # Plot 1F - Identified HLA-specific SARS-CoV-2 epitopes and HLA-restricted immunogenicity
-
-```{r}
-library("patchwork")
-```
 
 ```{r}
 
@@ -312,12 +183,75 @@ combined <- pl1 | pl2 +
 combined
 ```
 
-The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA. \
+The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA.\
 This highlights the absolute and relative immunogenicity of different HLA types.
 
 # Plot 1G
 
 ```{r}
+#goodone
+
+#we need to do it in clean
+complete_data <- experiment_data |>
+  mutate(Protein = str_to_upper(Protein))
+  
+
+protein_colors <- c(
+  "ORF1" = "#1f77b4",
+  "S" = "#ff7f0e",  
+   "ORF3"= "#2ca02c",
+  "ORF6" = "pink",
+  "ORF7" = "red",
+  "ORF8" = "lightblue",
+  "ORF10" = "yellow",
+  "E" = "purple",
+  "M" = "darkblue",
+  "N" = "darkred"
+)
+
+extras <- complete_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    HLA = factor(HLA, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
+  
+  
+  extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ Protein, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 16),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Protein",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
 
 ```
 
@@ -381,14 +315,36 @@ combined <- pl1 | pl2 +
 combined
 ```
 
-The plot compares, for each SARS-CoV-2 protein, the total number of HLA-peptide combination that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides relative to all detected peptides of that protein. \
+The plot compares, for each SARS-CoV-2 protein, the total number of HLA-peptide combination that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides relative to all detected peptides of that protein.\
 This highlights the absolute and relative immunogenicity of different protein types.
 
-# Plot 1I
+# Plot 1I- frequency of epitopes across proteins of origin
+
+It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
 
 ```{r}
 
+augmented_data <- experiment_data |>
+  mutate ( estimatedFrequency = estimatedFrequency*100, #converts into percentage
+           total_estimated_frequency = total_estimated_frequency*100,
+  sampleID = fct_reorder(sampleID, total_estimated_frequency)) |> #reorders based on value of second argument
+  arrange(desc(total_estimated_frequency))
+
 ```
+
+```{r}
+palette10 <- c(
+  "#E69F00", "#56B4E9", "#009E73","#00AFAA", "#0072B2","#D55E00", "#CC79A7", "#F0E442","#0099BB", "#5A61FF")
+
+augmented_data|>
+ggplot(aes(x = estimatedFrequency, y = sampleID, fill = Protein)) +
+  geom_col( position = "stack") +
+  scale_fill_manual(values  = palette10) +
+  scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
+  labs( x = "SARS-CoV-2 reactive CD8 T cells (%)", y = "Samples", title = "Frequency of SARS-CoV-2 reactive CD8 T cells in patients with COVID19, distributed across protein of origin")
+```
+
+As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1). However, we can perform some normalization to calculate the percentage of immunogenic peptides that arise from each gene. (Selina's figures).
 
 # Plot 2A - funny plot
 
