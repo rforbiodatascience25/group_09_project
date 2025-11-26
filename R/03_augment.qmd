@@ -3,6 +3,20 @@ title: "03_augment"
 format: html
 ---
 
+------------------------------------------------------------------------
+
+Script: **03_augment.R**
+
+**Purpose**: Add derived variables (e.g. HLA–peptide combo, response flag, estimated frequencies) on top of the cleaned dataset.
+
+**Why**: These features are needed for downstream immunological interpretation and analyses.
+
+**Input**: 02_dat_clean.tsv
+
+**Output**: 03_dat_aug.tsv
+
+------------------------------------------------------------------------
+
 ```{r}
 # Read data/02_dat_clean.tsv
 # Add derived variables (e.g. immunodominant flag, ORF groups, etc.)
