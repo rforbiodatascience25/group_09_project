@@ -3,6 +3,16 @@ title: "02_clean"
 format: html
 ---
 
+------------------------------------------------------------------------
+
+Script: **02_clean.R** \#
+
+**Purpose**: Combine per-sheet TSV files, clean and tidy the data, and derive key variables for analysis.
+
+**Why**: We want a single, tidy table that is easy to use \# in downstream analyses and visualisations. \# Input: TSV files in data/sheets_tsv/ (one per sheet) \# Output: 02_data_clean.tsv (clean, combined dataset)
+
+------------------------------------------------------------------------
+
 ```{r}
 # Read data/01_dat_load.tsv
 # Clean and convert to tidy format
