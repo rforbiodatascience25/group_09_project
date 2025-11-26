@@ -13,7 +13,7 @@ Script: **02_clean.R**
 
 **Input**: TSV files in data/sheets_tsv/ (one per sheet).
 
-**Output**: 02_data_clean.tsv (clean, combined dataset).
+**Output**: 02_dat_clean.tsv (clean, combined dataset).
 
 ------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ library(here)       # reproducible file paths
 ```
 
 ```{r}
-# Load project-specific helper functions -----------------------------------
+# Load project helper functions -----------------------------------
 source("99_proj_func.R")  # load_tsvData(), save_tsvData(), etc.
 ```
 
@@ -178,5 +178,5 @@ Save cleaned data as tsv
 
 ```{r}
 # Save cleaned data as TSV -------------------------------------------------
-save_tsvData(clean_data, "02_data_clean.tsv")
+save_tsvData(clean_data, "02_dat_clean.tsv")
 ```
