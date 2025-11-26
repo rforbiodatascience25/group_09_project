@@ -159,7 +159,7 @@ clean_data <- clean_data |>
   select(-weird1, -extra, -genome
          )|>
   mutate( Protein = str_replace(Protein, "ORF1", "ORF10"),
-          Protein = str_replace(Protein, "orf1", "ORF1"))
+          Protein = str_replace(Protein, "orf1", "ORF1"))       #fix orf1 typo
 
 # Optional: inspect clean data
 clean_data
