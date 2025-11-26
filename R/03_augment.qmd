@@ -82,5 +82,6 @@ complete_data
 Write 03 file
 
 ```{r}
-save_tsvData(complete_data, "03_data_augment.tsv")
+# Save augmented data -------------------------------------------------------
+write_tsv(aug_data, here("data", "03_dat_aug.tsv"))
 ```
