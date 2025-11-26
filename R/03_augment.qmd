@@ -38,12 +38,6 @@ clean_data <- read_tsv(file = path, show_col_types = FALSE)
 clean_data
 ```
 
-```{r}
-##### Try later if function works
-# Load cleaned data ---------------------------------------------------------
-# aug_data <- load_tsvData("02_dat_clean.tsv", show_col_types = FALSE)
-```
-
 Create new columns
 
 HLA-peptides (HLA-peptide combination)
