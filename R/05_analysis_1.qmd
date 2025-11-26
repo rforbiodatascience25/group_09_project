@@ -31,174 +31,46 @@ experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
 
 ```
 
-# Plot 1F
+# Plot 1F - Identified HLA-specific SARS-CoV-2 epitopes and HLA-restricted immunogenicity
 
 ```{r}
 library("patchwork")
 ```
 
-WHAT normalization method should I use?? here: HLA(significant) / HLA ???
-
 ```{r}
-experiment_data|>
-  filter(HLA == "C07:02")
-```
 
-Plot 1: how many Peptides per HLA for positive T-cell responses
-
-```{r}
-#order the HLA in descending order
-library(forcats)
-```
-
-```{r}
-experiment_data |>
+#how many peptides per HLA for positive T-responses
+extract_data <- 
+  experiment_data|>
   mutate(HLA = str_remove(HLA, ":"))|>
-  filter(response == 1)|>
+  filter(response ==1)|>
   group_by(HLA)|>
-  summarize(number = n_distinct(Peptide))|>
+  summarize(peptidesPerHLA = n_distinct(Peptide))|>
   ungroup()|>
-  mutate(HLA = fct_reorder(HLA, number, .desc = FALSE))
-```
-
-Plt2: how many Peptides percentage (number of peptides over all peptides?) per HLA for positive T-cell responses
-
-Here: amount of peptides out of all positive T-cell responses
-
-```{r}
-experiment_data |>
-  filter(response == 1)|>
-    group_by(HLA)|>
-  summarize(number = n_distinct(Peptide))|>
-  ungroup()|>
-  mutate(
-    total_peptides = sum(number),
-    percentage_peptides = number/total_peptides * 100
-  )
-  
-```
-
-Here amount of peptides out of all peptides:
-
-```{r}
-total_peptides <- experiment_data|>
-  summarize(total = n_distinct(Peptide)) |> 
-  pull(total)
-  
-experiment_data |>
-  filter(response == 1)|>
-  group_by(HLA)|>
-  summarize(number = n_distinct(Peptide))|>
-  ungroup()|>
-  mutate(
-    percentage_peptides = number/total_peptides * 100
-  )
-```
-
-```{r}
-preprocess_hla <- function(data, value_col = "number", normalize = FALSE){
-  
-  preprocessed_data <- data |>
-    mutate(HLA = str_remove(HLA, ":"))|>
-    filter(response == 1)|>
-    group_by(HLA)|>
-    summarize(number = n_distinct(Peptide))|>
-    ungroup()|>
-    arrange(desc(HLA)) |> 
-    mutate(HLA = fct_inorder(HLA))
-  
-  if (normalize){
-    total_peptides <- data |>
-      summarize(total = n_distinct(Peptide))|>
-      pull(total)
-    
-    preprocessed_data <- preprocessed_data |>
-      mutate(percentage_peptides = number/total_peptides*100)
-  }
-  
-  return(preprocessed_data)
-  
-}
-```
-
-```{r}
-plot_hla <- function(preprocessed_data, x_col, caption, show_y_text = TRUE){
-  
-  preprocessed_data |>
-    ggplot(
-    aes(x= !!sym(x_col), 
-        y = HLA)
-  ) + 
-  geom_col(aes(width = 0.5), 
-           fill = "darkblue")+
-  geom_text(aes(label = if (x_col == "percentage_peptides") round(percentage_peptides, 1) else number),
-              hjust = -0.2) +
-  coord_cartesian(clip = "off")+
-    #expand x-scale for labels on bars by 20%
-  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
-  labs(caption = caption)+
-  theme(aspect.ratio = 2/1, 
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank(), 
-        axis.text.y = if (show_y_text) element_text(color = "black") else element_blank(),
-        axis.ticks = element_line(color = "black"),
-        axis.line = element_line(color = "black"),    
-        panel.background = element_rect(fill = "white"),
-    plot.caption = element_text(size = 12)
-  )
-  
-}
-```
-
-```{r}
-pl1 <- preprocess_hla(experiment_data)|>
-  plot_hla(x_col = "number",
-           caption = "Number of HLA-specific\nSARS-CoV-2 epitopes",
-           show_y_text = TRUE)
-
-pl2 <- preprocess_hla(experiment_data, normalize = TRUE)|>
-  plot_hla(x_col = "percentage_peptides",
-           caption="Immunogenic peptides\n(%, normalized)",
-           show_y_text = FALSE)
-
-combined <- pl1 | pl2 +
-  plot_layout(widths = c())
-
-combined
-  
-```
-
-all in one call
-
-```{r}
-
-total_peptides <- experiment_data|>
-  summarize(total = n_distinct(Peptide)) |> 
-  pull(total)
-
-
-
-
-pl1 <- experiment_data |>
-  mutate(HLA = str_remove(HLA, ":"))|>
-  filter(response == 1)|>
-  group_by(HLA)|>
-  summarize(number = n_distinct(Peptide))|>
-  ungroup()|>
+  #order HLA descending + fixes appearance for plotting
   arrange(desc(HLA)) |> 
-  #fixes factor levels in exactly the row order appearing now
-  mutate(HLA = fct_inorder(HLA))|>
-  
-  
+  mutate(HLA = fct_inorder(HLA))
+
+#compute all peptides per HLA independent of positive/negative T-responses
+totalPeptidesPerHLA <- experiment_data|>
+  group_by(HLA)|>
+  summarize(totalPeptidesPerHLA = n_distinct(Peptide)) |> 
+  arrange(desc(HLA)) |> 
+  #also need the same order for combining correct values
+  mutate(HLA = fct_inorder(HLA)) |>
+  pull(totalPeptidesPerHLA)
+
+
+
+
+pl1 <- extract_data |>
   ggplot(
-    aes(x= number, 
+    aes(x= peptidesPerHLA, 
         y = HLA)
   ) + 
   geom_col(aes(width = 0.5), 
            fill = "darkblue")+
-  geom_text(aes(label = number), 
-            hjust = -0.2)+
-  coord_cartesian(clip = "off")+
+  geom_text(aes(label = peptidesPerHLA), hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
   labs(caption = "Number of HLA-specific\nSARS-CoV-2 epitopes")+
   theme(aspect.ratio = 2/1, 
@@ -207,18 +79,12 @@ pl1 <- experiment_data |>
         axis.ticks = element_line(color = "black"),
         axis.line = element_line(color = "black"),    
         panel.background = element_rect(fill = "white"),
-    plot.caption = element_text(size = 12)
+        plot.caption = element_text(size = 12)
   )
 
-
-  
-pl2 <- experiment_data |>
-  filter(response == 1)|>
-  group_by(HLA)|>
-  summarize(number = n_distinct(Peptide))|>
-  ungroup()|>
+pl2 <- extract_data |>
   mutate(
-    percentage_peptides = number/total_peptides * 100
+    percentage_peptides = peptidesPerHLA/totalPeptidesPerHLA * 100
   )|>
 
    ggplot(
@@ -229,7 +95,6 @@ pl2 <- experiment_data |>
            fill = "darkblue")+
   geom_text(aes(label = round(percentage_peptides, digits = 1)), 
             hjust = -0.2)+
-  coord_cartesian(clip = "off")+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
   labs(caption = "Immunogenic peptides\n (%, normalized)")+
   theme(aspect.ratio = 2/1, 
@@ -241,16 +106,17 @@ pl2 <- experiment_data |>
         panel.background = element_rect(fill = "white"),
     plot.caption = element_text(size = 12)
   )
-   
-   
-   
-   
+  
+
 
 combined <- pl1 | pl2 +
   plot_layout(widths = c())
 
 combined
 ```
+
+The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA. \
+This highlights the absolute and relative immunogenicity of different HLA types.
 
 # Plot 1G
 
@@ -258,92 +124,68 @@ combined
 
 ```
 
-# Plot 1H
+# Plot 1H - Epitopes derived from each SARS-CoV protein and their immunogenicity score
 
 ```{r}
-experiment_data |>
-  filter(Protein == "E")
-```
+extract_data <- experiment_data|>
+  group_by(Protein)|>
+      summarize(total = n_distinct(`HLA-peptide`),
+                number_Tcells = sum(response == 1))
 
-```{r}
-experiment_data|>
-  mutate(Protein = toupper(Protein))|>
-    group_by(Protein)|>
-    summarize(number_Tcells = sum(response == 1))
-```
 
-```{r}
-preprocess_protein <- function(data, value_col = "number_Tcells", normalize = FALSE){
-  
-  preprocessed_data <- data |>
-    mutate(Protein = toupper(Protein))|>
-    group_by(Protein)|>
-    summarize(number_Tcells = sum(response == 1))|>
-    ungroup()|>
-    arrange((Protein)) |> 
-    mutate(Protein = fct_inorder(Protein))
-  
-  if (normalize){
-    total_peptides <- data |>
-      summarize(total = n_distinct(Peptide))|>
-      pull(total)
-    
-    preprocessed_data <- preprocessed_data |>
-      mutate(percentage_peptides = number_Tcells/total_peptides*100)
-  }
-  
-  return(preprocessed_data)
-  
-}
-
-```
-
-```{r}
-plot_protein <- function(preprocessed_data, x_col, caption, show_y_text = TRUE){
-  
-  preprocessed_data |>
-    ggplot(
-    aes(x= !!sym(x_col), #evaluate variable string as a column name 
+pl1 <- extract_data |>
+  ggplot(
+    aes(x = number_Tcells,
         y = Protein,
         fill = Protein)
-  ) + 
+  )+
   geom_col(aes(width = 0.5))+
-  geom_text(aes(label = if (x_col == "percentage_peptides") round(percentage_peptides, 1) else number_Tcells),
-              hjust = -0.2) +
-  coord_cartesian(clip = "off")+
-    #expand x-scale for labels on bars by 20%
+  geom_text(aes(label = number_Tcells),hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
-  labs(caption = caption)+
+  labs(caption = "SARS-CoV-2\nT cell responses")+
   theme(aspect.ratio = 2/1, 
         axis.title.x = element_blank(), 
         axis.title.y = element_blank(), 
-        axis.text.y = if (show_y_text) element_text(color = "black") else element_blank(),
         axis.ticks = element_line(color = "black"),
         axis.line = element_line(color = "black"),    
         panel.background = element_rect(fill = "white"),
-    plot.caption = element_text(size = 12),
-    legend.position = "none"
-    )
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
+
+
+pl2 <- extract_data |>
+  mutate(
+    percentage_peptides = number_Tcells/total * 100
+  )|>
+  ggplot(
+    aes(x = percentage_peptides,
+        y = Protein,
+        fill = Protein)
+  )+
+  geom_col(aes(width = 0.5))+
+  geom_text(aes(label = round(percentage_peptides, digits = 1)),hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Immunogenic peptides\n(%, normalized)")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
   
-}
-```
-
-```{r}
-pl1 <- preprocess_protein(experiment_data)|>
-  plot_protein(x_col = "number_Tcells",
-           caption = "SARS-CoV-2\nT cell responses",
-           show_y_text = TRUE)
-
-pl2 <- preprocess_protein(experiment_data, normalize = TRUE)|>
-  plot_protein(x_col = "percentage_peptides",
-           caption="Immunogenic peptides\n(%, normalized)",
-           show_y_text = FALSE)
-
 combined <- pl1 | pl2 +
   plot_layout(widths = c())
 
 combined
 ```
+
+The plot compares, for each SARS-CoV-2 protein, the total number of HLA-peptide combination that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides relative to all detected peptides of that protein. \
+This highlights the absolute and relative immunogenicity of different protein types.
 
 # Plot 1I
 
