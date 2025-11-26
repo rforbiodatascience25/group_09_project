@@ -7,3 +7,161 @@ format: html
 # First main analysis
 # e.g. immunodominance landscape similar to Fig. 1E
 ```
+
+## Load the libraries
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggbreak)
+library(ggforce)
+
+```
+
+## Graph
+
+```{r}
+complete_data |> 
+  colnames()
+```
+
+```{r}
+#goodone
+library(dplyr)
+library(ggplot2)
+library(ggbreak)
+library(ggforce)
+
+#we need to do it in clean
+complete_data <- complete_data |>
+  mutate(Protein = str_to_upper(Protein))
+  
+
+protein_colors <- c(
+  "ORF1" = "#1f77b4",
+  "S" = "#ff7f0e",  
+   "ORF3"= "#2ca02c",
+  "ORF6" = "pink",
+  "ORF7" = "red",
+  "ORF8" = "lightblue",
+  "ORF10" = "yellow",
+  "E" = "purple",
+  "M" = "darkblue",
+  "N" = "darkred"
+)
+
+extras <- complete_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01")))
+  
+  
+  extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ HLA, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 16),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "HLA",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+
+```
+
+```{r}
+#goodone
+library(dplyr)
+library(ggplot2)
+library(ggbreak)
+library(ggforce)
+
+#we need to do it in clean
+complete_data <- complete_data |>
+  mutate(Protein = str_to_upper(Protein))
+  
+
+protein_colors <- c(
+  "ORF1" = "#1f77b4",
+  "S" = "#ff7f0e",  
+   "ORF3"= "#2ca02c",
+  "ORF6" = "pink",
+  "ORF7" = "red",
+  "ORF8" = "lightblue",
+  "ORF10" = "yellow",
+  "E" = "purple",
+  "M" = "darkblue",
+  "N" = "darkred"
+)
+
+extras <- complete_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    HLA = factor(HLA, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
+  
+  
+  extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ Protein, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 16),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Protein",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+```
