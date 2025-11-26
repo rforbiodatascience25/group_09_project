@@ -110,23 +110,9 @@ clean_data <- combined_data |>
     Peptide,
     MultimerFrequency
   )
-###################################   try if the first one works
-subset_data <-combined_data |>
-  select(
-    c("sample", 
-      "count.1", 
-      "input.1", 
-      "input.2", 
-      "input.3", 
-      "log_fold_change", 
-      "p", 
-      "HLA", 
-      "Protein", 
-      "Peptide",
-      "MultimerFrequency")
-  )
 
-subset_data
+# Optional: inspect clean data
+clean_data
 ```
 
 Extract patient number
@@ -170,10 +156,13 @@ clean_data <- clean_data |>
     names= c("genome", "weird1", "Protein", "extra"), 
     too_few ="align_start" 
     )|>
-  select(-weird1, -extra, -genome)
+  select(-weird1, -extra, -genome
+         )|>
+  mutate( Protein = str_replace(Protein, "ORF1", "ORF10"),
+          Protein = str_replace(Protein, "orf1", "ORF1"))
 
-combined_data_new
-
+# Optional: inspect clean data
+clean_data
 ```
 
 Save cleaned data as tsv
