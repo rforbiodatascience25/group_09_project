@@ -5,34 +5,49 @@ format: html
 
 # Load raw data
 
+------------------------------------------------------------------------
+
+Script: **01_load.R**
+
+**Purpose**: Load raw Excel data (multiple sheets) and export each sheet as an individual TSV file.
+
+**Why**: Converting each sheet into its own flat text file makes downstream wrangling easier, more modular, and reproducible.
+
+------------------------------------------------------------------------
+
 ```{r}
-#load libraries
-library("readxl")
-library("tidyverse")
-library("here")
-library("purrr")
+# Load libraries -----------------------------------------------------------
+library(readxl)     # reading Excel files
+library(tidyverse)  # tidy data tools including write_tsv()
+library(here)       # reproducible file paths
+library(purrr)      # functional programming: map(), imap()
 ```
 
 ```{r}
-# Dynamically load the Excel file with "here"
+# Load Excel file ----------------------------------------------------------
+# Dynamically build path so the script works on any machine
 raw_file_path <- here("data", "_raw", "AP_cohort_COVID_1_raw.xlsx")
-sheets <- excel_sheets(raw_file_path)
 
+# Retrieve all sheet names
+sheet_names <- excel_sheets(raw_file_path)
 
-sheet_list <- map(sheets, 
-                  ~ read_xlsx(raw_file_path, 
-                              sheet = .x))
-names(sheet_list) <- sheets
+# Read each sheet as a tibble and store them in a named list
+sheet_list <- map(sheet_names, ~ read_xlsx(raw_file_path, sheet = .x))
+names(sheet_list) <- sheet_names
 ```
 
 ```{r}
-#create tsv-files from nested tibble
-dir.create(here("data","sheets_tsv"))
+# Export sheets to TSV files -----------------------------------------------
+# Create output directory (if it doesn’t exist yet)
 out_dir <- here("data", "sheets_tsv")
+dir.create(out_dir, showWarnings = FALSE)
 
-imap(sheet_list, 
-     function(df, sheet_name) {
-  out_file <- here(out_dir, paste0(sheet_name, ".tsv"))
-  write_tsv(df, out_file)
-})
+# Loop over each sheet and write to a TSV file
+imap(
+  sheet_list,
+  function(df, sheet_name) {
+    out_file <- file.path(out_dir, paste0(sheet_name, ".tsv"))
+    write_tsv(df, out_file)
+  }
+)
 ```

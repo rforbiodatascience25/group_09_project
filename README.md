@@ -1,39 +1,34 @@
+## Project Contributors
 Group09:\
-Selina Friesen - s252027\
-Marta Sanchez Sanchez - s254791\
-Sergi Fornos -\
-Tommaso Ballocci - s257151\
-Ivan Musalyk -
+Selina Friesen - s252027 - SeFrie\
+Marta Sanchez Sanchez - s254791 - martasanchez99\
+Sergi Fornos - s253693 - SergiFornos\
+Tommaso Ballocci - s257151 - tobal-r\
+Ivan Musalyk - - Ivan Mus
 
 ## Project Overview
 
 This repository implements the required R4BDS project structure.
 
-The project analyses epitope-level CD8 T cell responses against SARS-CoV-2, based on the dataset from Saini et al., Sci Immunol 2021.
+In this group project, we will analyse CD8+ T cell responses against SARS-CoV-2 epitopes, based on the dataset published by Saini et al., Science Immunology 2021. The aim of the project is to visualize how epitope responses are distributed across patients, what is their prevalence and which are the most immunodominant epitopes across different HLAs.
 
 ## Data Retrieval
 
-Raw data are NOT stored on GitHub.
-
-Place the raw data file(s) in:
-
--   `data/_raw/raw_data.xlsx`
-
-or adapt the file name and path in `R/01_load.qmd`. If programmatic retrieval is possible, implement it in `01_load.qmd` and describe access in a safe way.
+The raw data was provided by the authors of the paper upon request. This file is then stored in `data/_raw/raw_data.xlsx.` Since the data folder is not saved on GitHub, it is necessary to download the data locally with the given directory.
 
 ## Project Structure
 
 -   `data/_raw/` – raw, untouched data
 
--   `data/01_dat_load.tsv` – loaded / combined data
+-   `data/sheets_tsv/` – tsv files for each patient
 
--   `data/02_dat_clean.tsv` – cleaned, tidy data
+-   `data/02_data_clean.tsv` – combined, cleaned, tidy data
 
--   `data/03_dat_aug.tsv` – data with derived variables
+-   `data/03_data_augment.tsv` – wrangled data with derived variables
 
 -   `R/01_load.qmd` – load raw data
 
--   `R/02_clean.qmd` – clean and tidy data
+-   `R/02_clean.qmd` – combine, clean and tidy data
 
 -   `R/03_augment.qmd` – add derived variables
 
