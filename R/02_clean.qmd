@@ -50,13 +50,15 @@ col_spec <- cols(
 # Load and combine all patient TSVs into one data frame --------------------
 combined_data <- patient_files |>
   map_dfr(
-    ~ read_tsv(
-        file = file.path(tsv_folder, .x),
+    ~load_tsvData(
+        filename = .x,
+        folder = tsv_folder,
         col_types = col_spec,
         na = c("NA", "N/A", "---"),
         show_col_types = FALSE
       )
   )
+
 
 # Optional: inspect combined data
 combined_data
@@ -169,5 +171,5 @@ Save cleaned data as tsv
 
 ```{r}
 # Save cleaned data as TSV -------------------------------------------------
-write_tsv(clean_data, here("data", "02_dat_clean.tsv"))
+save_tsvData(clean_data, "02_data_clean.tsv")
 ```

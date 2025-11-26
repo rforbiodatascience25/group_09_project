@@ -32,8 +32,7 @@ source("99_proj_func.R")
 Load data
 
 ```{r}
-path <- here("data", "02_data_clean.tsv")
-clean_data <- read_tsv(file = path, show_col_types = FALSE)
+clean_data <- load_tsvData("02_data_clean.tsv", show_col_types = FALSE)
 
 clean_data
 ```
@@ -116,5 +115,5 @@ Write 03_dat_aug file
 
 ```{r}
 # Save augmented data -------------------------------------------------------
-write_tsv(aug_data, here("data", "03_dat_aug.tsv"))
+save_tsvData(aug_data, "03_data_aug.tsv")
 ```
