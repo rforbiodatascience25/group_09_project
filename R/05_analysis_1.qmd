@@ -8,6 +8,47 @@ format: html
 # e.g. immunodominance landscape similar to Fig. 1E
 ```
 
+```{r}
+#| warning: true
+library("tidyverse")
+library("here")
+library("paletteer") #remove this package
+library("forcats") #same
+```
+
+## Figure 1I - frequency of epitopes across proteins of origin
+
+It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
+
+```{r}
+#| title: "total estimated frequency per patient"
+
+path = here("data", "03_data_augment.tsv")
+augmented_data <- read_tsv(file = path, show_col_types = FALSE)
+
+augmented_data <- augmented_data |>
+  mutate ( estimatedFrequency = estimatedFrequency*100, #converts into percentage
+           total_estimated_frequency = total_estimated_frequency*100,
+  sampleID = fct_reorder(sampleID, total_estimated_frequency)) |> #reorders based on value of second argument
+  arrange(desc(total_estimated_frequency))
+
+```
+
+```{r}
+#| out-width: 100%
+#| fig-width: 10
+palette10 <- c(
+  "#E69F00", "#56B4E9", "#009E73","#00AFAA", "#0072B2","#D55E00", "#CC79A7", "#F0E442","#0099BB", "#5A61FF")
+
+ggplot(augmented_data,
+       aes(x = estimatedFrequency, y = sampleID, fill = Protein)) +
+  geom_col( position = "stack") +
+  scale_fill_manual(values  = palette10) +
+  scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
+  labs( x = "SARS-CoV-2 reactive CD8 T cells (%)", y = "Samples", title = "Frequency of SARS-CoV-2 reactive CD8 T cells in patients with COVID19, distributed across protein of origin")
+```
+
+As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1). However, we can perform some normalization to calculate the percentage of immunogenic peptides that arise from each gene. (Selina's figures).
 Libraries
 
 ```{r}
