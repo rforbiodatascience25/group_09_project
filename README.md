@@ -1,9 +1,10 @@
+## Project Contributors
 Group09:\
-Selina Friesen - s252027\
-Marta Sanchez Sanchez - s254791\
-Sergi Fornos - s253693\
-Tommaso Ballocci - s257151\
-Ivan Musalyk -
+Selina Friesen - s252027 - SeFrie\
+Marta Sanchez Sanchez - s254791 - martasanchez99\
+Sergi Fornos - s253693 - SergiFornos\
+Tommaso Ballocci - s257151 - tobal-r\
+Ivan Musalyk - - Ivan Mus
 
 ## Project Overview
 
