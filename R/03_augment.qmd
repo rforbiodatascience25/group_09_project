@@ -3,25 +3,39 @@ title: "03_augment"
 format: html
 ---
 
+------------------------------------------------------------------------
+
+Script: **03_augment.R**
+
+**Purpose**: Add derived variables (e.g. HLA–peptide combo, response flag, estimated frequencies) on top of the cleaned dataset.
+
+**Why**: These features are needed for downstream immunological interpretation and analyses.
+
+**Input**: 02_dat_clean.tsv
+
+**Output**: 03_dat_aug.tsv
+
+------------------------------------------------------------------------
+
 ```{r}
-# Read data/02_dat_clean.tsv
-# Add derived variables (e.g. immunodominant flag, ORF groups, etc.)
-# Save as data/03_dat_aug.tsv
+# Load libraries ------------------------------------------------------------
+#| warning: false
+library(tidyverse)  # data wrangling, summaries, etc.
+library(here)       # reproducible file paths
 ```
 
 ```{r}
-#| warning: false
-library("tidyverse")
-library("here")
+# Load helper functions -----------------------------------------------------
+source("99_proj_func.R")
 ```
 
 Load data
 
 ```{r}
-path = here("data", "02_data_clean.tsv")
-combined_data_new <- read_tsv(file = path, show_col_types = FALSE)
+path <- here("data", "02_data_clean.tsv")
+clean_data <- read_tsv(file = path, show_col_types = FALSE)
 
-combined_data_new
+clean_data
 ```
 
 Create new columns
@@ -29,18 +43,32 @@ Create new columns
 HLA-peptides (HLA-peptide combination)
 
 ```{r}
-combined_data_new <- combined_data_new |>   
-  mutate('HLA-peptide' = paste(HLA, Peptide, sep = "-")) 
-combined_data_new
+# Create HLA–peptide combination -------------------------------------------
+# Combine HLA and peptide into a single identifier.
+# Example: "A02:01" + "YLQPRTFLL" -> "A02:01-YLQPRTFLL"
+aug_data <- clean_data |>
+  mutate(
+    'HLA-peptide' = paste(HLA, Peptide, sep = "-")
+  )
+
+aug_data
 ```
 
 Identify response by log_fold_change and p-value
 
 ```{r}
-combined_data_new <- combined_data_new |>   
-  mutate(response = if_else((log_fold_change >= 2.0 & p < 0.05),1,0))
-
-combined_data_new
+# Define response based on logFC and p-value --------------------------------
+# Response if:
+#   - log_fold_change >= 2.0
+#   - p < 0.05
+aug_data <- aug_data |>
+  mutate(
+    response = if_else(
+      log_fold_change >= 2.0 & p < 0.05,
+      1L,
+      0L
+    )
+  )
 ```
 
 Estimated Frequency (based on the authors:
@@ -48,32 +76,45 @@ Estimated Frequency (based on the authors:
 -   count.1 / (sum of count.1 for Responses) \* multimer Frequency
 
 ```{r}
-complete_data <- combined_data_new |>   
-  group_by(sample)|>   
-  mutate(ResponseCount = sum(count.1*response))|>
-  ungroup()|>
-  mutate(estimatedFrequency = case_when(ResponseCount == 0 ~ 0,       
-                                        response == 1 ~ 
-                                          (count.1 / ResponseCount)*MulitmerFrequency,
-                                        TRUE ~ 0))  
-complete_data
+# Estimate peptide frequency per sample -------------------------------------
+#   ResponseCount (per sample) = sum(count.1 * response)
+#   estimated_frequency (for responding rows only) =
+#       count.1 / ResponseCount * MultimerFrequency
+#   If ResponseCount == 0, set estimated_frequency = 0
+aug_data <- aug_data |>
+  group_by(sample) |>
+  mutate(
+    response_count = sum(count.1 * response)
+  ) |>
+  ungroup() |>
+  mutate(
+    estimated_frequency = case_when(
+      response_count == 0 ~ 0,
+      response == 1 ~ (count.1 / response_count) * MultimerFrequency,
+      TRUE ~ 0
+    )
+  )
+
+aug_data
 ```
 
 ```{r}
-#total estimate frequencies to check if it is correct
-
-complete_data <- complete_data |>
-  group_by(sampleID)|>
-  mutate(total_estimated_frequency = sum(estimatedFrequency)) |> 
+# Check total estimated frequency per sample --------------------------------
+# For QC: total_estimated_frequency per sample should align with
+# MultimerFrequency (up to rounding / numerical differences).
+aug_data <- aug_data |>
+  group_by(sample) |>
+  mutate(
+    total_estimated_frequency = sum(estimated_frequency)
+  ) |>
   ungroup()
 
-complete_data
+aug_data
 ```
 
-Write 03 file
+Write 03_dat_aug file
 
 ```{r}
-file_path <- here("data", "03_data_augment.tsv")
-
-write_tsv(complete_data, file = file_path)
+# Save augmented data -------------------------------------------------------
+write_tsv(aug_data, here("data", "03_dat_aug.tsv"))
 ```

@@ -49,3 +49,55 @@ ggplot(augmented_data,
 ```
 
 As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1). However, we can perform some normalization to calculate the percentage of immunogenic peptides that arise from each gene. (Selina's figures).
+Libraries
+
+```{r}
+library("here")
+library("tidyverse")
+```
+
+```{r}
+source("99_proj_func.R")
+```
+
+Load data
+
+```{r}
+experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
+```
+
+# Plot 1E
+
+```{r}
+
+```
+
+# Plot 1F
+
+```{r}
+
+```
+
+# Plot 1G
+
+```{r}
+
+```
+
+# Plot 1H
+
+```{r}
+
+```
+
+# Plot 1I
+
+```{r}
+
+```
+
+# Plot 2A - funny plot
+
+```{r}
+
+```

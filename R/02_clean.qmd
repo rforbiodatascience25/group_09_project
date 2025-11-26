@@ -3,16 +3,30 @@ title: "02_clean"
 format: html
 ---
 
+------------------------------------------------------------------------
+
+Script: **02_clean.R**
+
+**Purpose**: Combine per-sheet TSV files, clean and tidy the data, and create the key variables for analysis.
+
+**Why**: We want a single, tidy table that is easy to use in downstream analyses and visualisations.
+
+**Input**: TSV files in data/sheets_tsv/ (one per sheet).
+
+**Output**: 02_dat_clean.tsv (clean, combined dataset).
+
+------------------------------------------------------------------------
+
 ```{r}
-# Read data/01_dat_load.tsv
-# Clean and convert to tidy format
-# Save as data/02_dat_clean.tsv
+# Load packages ------------------------------------------------------------
+#| warning: false
+library(tidyverse)  # data wrangling, string handling, etc.
+library(here)       # reproducible file paths
 ```
 
 ```{r}
-#| warning: false
-library("tidyverse")
-library("here")
+# Load project helper functions -----------------------------------
+source("99_proj_func.R")  # load_tsvData(), save_tsvData(), etc.
 ```
 
 Create a combined tsv
@@ -20,95 +34,109 @@ Create a combined tsv
 ```{r}
 #| warning: false
 
-file_path <- here("data", "sheets_tsv")
+# Define data folder and list patient files --------------------------------
+tsv_folder <- here("data", "sheets_tsv")
 
-patients <- list.files(
-  path = file_path,
-  full.names = TRUE)
-
-
-
-#define correct interpretation of column which raised error
-col_spec <- cols(
-    `-log10(masked_p)` = col_double()
+patient_files <- list.files(
+  path = tsv_folder
 )
 
 
-#vertically stacking as each patient has same cols
-combined_data <- patients |>
+# Define correct spec for column which raised error ------------------------
+col_spec <- cols(
+  `-log10(masked_p)` = col_double()
+)
+
+# Load and combine all patient TSVs into one data frame --------------------
+combined_data <- patient_files |>
   map_dfr(
-    .f = ~ read_tsv(
-        file = .x,
-        col_types = col_spec, 
-        na = c("NA", "N/A", "---")
-    )
+    ~ read_tsv(
+        file = file.path(tsv_folder, .x),
+        col_types = col_spec,
+        na = c("NA", "N/A", "---"),
+        show_col_types = FALSE
+      )
   )
 
+# Optional: inspect combined data
 combined_data
 ```
 
 Extract PE+ Population = Multimer Frequency
 
 ```{r}
+# Derive multimer frequency per sample ------------------------------------
+# Column ...33 contains the per-row frequency; we:
+#  1) rename it for clarity,
+#  2) sum per sample (replacing NAs with 0),
+#  3) store result in MultimerFrequency.
+
 combined_data <- combined_data |>
-  group_by(sample)|>
-  rename(freq= ...33)|>
+  group_by(sample) |>
+  rename(freq = ...33) |>
   mutate(
-    MulitmerFrequency = sum(replace_na(freq, 0))
-  )|>
+    MultimerFrequency = sum(replace_na(freq, 0))
+  ) |>
   ungroup()
-
-
-combined_data
 ```
 
 Drop last row per patient
 
 ```{r}
- combined_data <- combined_data |>
+# Remove last / non-data rows per patient ----------------------------------
+# Here we drop rows without a barcode, which correspond to summary/empty rows.
+combined_data <- combined_data |>
   drop_na(barcode)
- 
- combined_data
+
+# Optional: inspect combined data
+# combined_data
 ```
 
 Keep only important columns
 
 ```{r}
-subset_data <-combined_data |>
+# Keep only important columns ----------------------------------------------
+clean_data <- combined_data |>
   select(
-    c("sample", 
-      "count.1", 
-      "input.1", 
-      "input.2", 
-      "input.3", 
-      "log_fold_change", 
-      "p", 
-      "HLA", 
-      "Protein", 
-      "Peptide",
-      "MulitmerFrequency")
+    sample,
+    count.1,
+    input.1,
+    input.2,
+    input.3,
+    log_fold_change,
+    p,
+    HLA,
+    Protein,
+    Peptide,
+    MultimerFrequency
   )
 
-subset_data
+# Optional: inspect clean data
+clean_data
 ```
 
 Extract patient number
 
 ```{r}
-combined_data_new <- subset_data |>
+# Extract patient ID from sample name --------------------------------------
+# Example assumption: "AP0501_xxx" -> patient ID "05"
+clean_data <- clean_data |>
   mutate(
-    sampleID = str_remove(sample, "_.*$"),
-    sampleID = str_sub(sampleID, start = 3, end = 4))|>
-  relocate(sampleID)
+    sampleID = str_remove(sample, "_.*$"),   # drop everything after first "_"
+    sampleID = str_sub(sampleID, start = 3, end = 4)  # keep characters 3–4 → "05"
+  ) |>
+  relocate(sampleID, .before = sample)
 
-
-combined_data_new
+# Optional: inspect clean data
+# clean_data
 ```
 
 Clean HLA
 
 ```{r}
-combined_data_new <- combined_data_new |>
+# Clean HLA field -----------------------------------------------------------
+# Remove the "HLA-" prefix so only the allele remains (e.g., "A02:01").
+clean_data <- clean_data |>
   mutate(
     HLA = str_remove(HLA, "HLA-")
   )
@@ -117,20 +145,29 @@ combined_data_new <- combined_data_new |>
 Extract gene
 
 ```{r}
-combined_data_new <- combined_data_new |>
-  separate_wider_delim(Protein, "_", names= c("genome", "weird1", "Protein", "extra"), too_few ="align_start" )|>
-  select(-weird1, -extra, -genome) |> 
+# Extract gene / protein information ---------------------------------------
+# Protein column structure is something like:
+#   genome_weird1_Protein_extra
+# We keep only the Protein part and drop helper pieces.
+clean_data <- clean_data |>
+  separate_wider_delim(
+    Protein, 
+    delim = "_", 
+    names= c("genome", "weird1", "Protein", "extra"), 
+    too_few ="align_start" 
+    )|>
+  select(-weird1, -extra, -genome
+         )|>
   mutate( Protein = str_replace(Protein, "ORF1", "ORF10"),
-          Protein = str_replace(Protein, "orf1", "ORF1"))
+          Protein = str_replace(Protein, "orf1", "ORF1"))       #fix orf1 typo
 
-combined_data_new
-
+# Optional: inspect clean data
+clean_data
 ```
 
 Save cleaned data as tsv
 
 ```{r}
-file_path <- here("data", "02_data_clean.tsv")
-
-write_tsv(combined_data_new, file = file_path)
+# Save cleaned data as TSV -------------------------------------------------
+write_tsv(clean_data, here("data", "02_dat_clean.tsv"))
 ```
