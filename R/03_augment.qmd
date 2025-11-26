@@ -18,7 +18,81 @@ Script: **03_augment.R**
 ------------------------------------------------------------------------
 
 ```{r}
-# Read data/02_dat_clean.tsv
-# Add derived variables (e.g. immunodominant flag, ORF groups, etc.)
-# Save as data/03_dat_aug.tsv
+# Load libraries ------------------------------------------------------------
+#| warning: false
+library(tidyverse)  # data wrangling, summaries, etc.
+library(here)       # reproducible file paths
+```
+
+```{r}
+# Load helper functions -----------------------------------------------------
+source("99_proj_func.R")
+```
+
+Load data
+
+```{r}
+# Load cleaned data --------------------------------------------------------
+path <- here("data", "02_data_clean.tsv")
+clean_data <- read_tsv(file = path, show_col_types = FALSE)
+
+# Optional: quick check
+# clean_data
+```
+
+```{r}
+combined_data_new <- load_tsvData("02_data_clean.tsv", show_col_types = FALSE)
+combined_data_new
+```
+
+Create new columns
+
+HLA-peptides (HLA-peptide combination)
+
+```{r}
+combined_data_new <- combined_data_new |>   
+  mutate('HLA-peptide' = paste(HLA, Peptide, sep = "-")) 
+combined_data_new
+```
+
+Identify response by log_fold_change and p-value
+
+```{r}
+combined_data_new <- combined_data_new |>   
+  mutate(response = if_else((log_fold_change >= 2.0 & p < 0.05),1,0))
+
+combined_data_new
+```
+
+Estimated Frequency (based on the authors:
+
+-   count.1 / (sum of count.1 for Responses) \* multimer Frequency
+
+```{r}
+complete_data <- combined_data_new |>   
+  group_by(sample)|>   
+  mutate(ResponseCount = sum(count.1*response))|>
+  ungroup()|>
+  mutate(estimatedFrequency = case_when(ResponseCount == 0 ~ 0,       
+                                        response == 1 ~ 
+                                          (count.1 / ResponseCount)*MultimerFrequency,
+                                        TRUE ~ 0))  
+complete_data
+```
+
+```{r}
+#total estimate frequencies to check if it is correct
+
+complete_data <- complete_data |>
+  group_by(sample)|>
+  mutate(total_estimated_frequency = sum(estimatedFrequency)) |>
+  ungroup()
+
+complete_data
+```
+
+Write 03 file
+
+```{r}
+save_tsvData(complete_data, "03_data_augment.tsv")
 ```
