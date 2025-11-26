@@ -119,7 +119,9 @@ Extract gene
 ```{r}
 combined_data_new <- combined_data_new |>
   separate_wider_delim(Protein, "_", names= c("genome", "weird1", "Protein", "extra"), too_few ="align_start" )|>
-  select(-weird1, -extra, -genome)
+  select(-weird1, -extra, -genome) |> 
+  mutate( Protein = str_replace(Protein, "ORF1", "ORF10"),
+          Protein = str_replace(Protein, "orf1", "ORF1"))
 
 combined_data_new
 

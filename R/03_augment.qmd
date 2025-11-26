@@ -63,8 +63,8 @@ complete_data
 #total estimate frequencies to check if it is correct
 
 complete_data <- complete_data |>
-  group_by(sample)|>
-  mutate(total_estimated_frequency = sum(estimatedFrequency)) |>
+  group_by(sampleID)|>
+  mutate(total_estimated_frequency = sum(estimatedFrequency)) |> 
   ungroup()
 
 complete_data
