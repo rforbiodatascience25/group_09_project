@@ -40,7 +40,7 @@ experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
 #goodone
 
 #we need to do it in clean
-complete_data <- experiment_data |>
+complete_data <- aug_data |>
   mutate(Protein = str_to_upper(Protein))
   
 
@@ -70,7 +70,7 @@ extras <- complete_data |>
     y = log_fold_change,
     colour = point_color,
     fill   = point_fill,
-    size = estimatedFrequency
+    size = estimated_frequency
   )) +
   geom_point() +
 
