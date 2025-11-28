@@ -1,24 +1,32 @@
 ---
-title: "Project Presentation"
+title: "Project Presentation - Group 09"
 format: revealjs
 ---
 
-# Title
+# Introduction \# 1
 
-Short description of the project.
+One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
 
-# Data
+# Introduction #2 
 
-Explain the dataset and how you retrieved it.
+# Materials and Methods #1
 
-# Methods
+2 people, code specificities and variables (raw data what it looked like...).\
+Selina and Sergi\
 
-Brief overview of your pipeline.
+# Materials 2
 
-# Results
+# Materials 3
 
-Show key plots.
+# Material 4
 
-# Conclusions
+# Results and discussion 1
 
-Main biological and methodological takeaways.
+2 people going through graphs and explain/draw biological conclusions from them.\
+Ivan and one of marta/tommaso
+
+# Results 2
+
+# results 3
+
+# Results 4
