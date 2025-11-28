@@ -3,30 +3,99 @@ title: "Project Presentation - Group 09"
 format: revealjs
 ---
 
-# Introduction \# 1
+## Introduction \# 1
 
 One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
 
-# Introduction #2 
+## Introduction #2
 
-# Materials and Methods #1
+## Materials and Methods #1 - Raw Data
 
-2 people, code specificities and variables (raw data what it looked like...).\
-Selina and Sergi\
+<div style="text-align:center; margin-bottom:0.2em;">
+![](Raw_data.png){width="80%"}
+</div>
 
-# Materials 2
+:::: {.columns}
 
-# Materials 3
+::: {.column width="30%"}
+<div style="text-align:center;">
+![](Raw_data_PEPercentage.png){width="50%"}
+</div>
+:::
 
-# Material 4
+::: {.column width="70%"}
 
-# Results and discussion 1
+<div style="text-align:center;">
+![](Raw_data_lastRow.png){width="90%"}
+</div>
+:::
+
+::::
+
+
+
+## Materials 2 -Loading Data
+
+```{r}
+#| eval: false
+#| echo: false
+# Load libraries -----------------------------------------------------------
+library(readxl)     # reading Excel files
+library(tidyverse)  # tidy data tools including write_tsv()
+library(here)       # reproducible file paths
+library(purrr)      # functional programming: map(), imap()
+```
+
+<small>
+```{r}
+#| eval: false
+#| echo: true
+#| message: false
+
+# Dynamically build path so the script works on any machine
+raw_file_path <- here("data", "_raw", "AP_cohort_COVID_1_raw.xlsx")
+
+# Retrieve all sheet names
+sheet_names <- excel_sheets(raw_file_path)
+
+# Read each sheet as a tibble and store them in a named list
+sheet_list <- map(sheet_names, ~ read_xlsx(raw_file_path, sheet = .x))
+names(sheet_list) <- sheet_names
+```
+<br>
+
+```{r}
+#| eval: false
+#| echo: true
+# Export sheets to TSV files -----------------------------------------------
+out_dir <- here("data", "sheets_tsv")
+
+# Write each sheet as a tsv file
+imap(
+  sheet_list,
+  function(df, sheet_name) {
+    out_file <- file.path(out_dir, paste0(sheet_name, ".tsv"))
+    write_tsv(df, out_file)
+  }
+)
+```
+</small>
+
+## Materials 3
+
+Cleaning Data
+
+## Material 4
+
+Augment Data
+
+## Results and discussion 1
 
 2 people going through graphs and explain/draw biological conclusions from them.\
 Ivan and one of marta/tommaso
 
-# Results 2
+## Results 2
 
-# results 3
+## results 3
 
-# Results 4
+## Results 4
