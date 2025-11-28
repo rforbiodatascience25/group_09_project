@@ -3,6 +3,22 @@ title: "00_all"
 format: html
 ---
 
-```{r}
-# Master pipeline controller
-```
+# Loading data
+
+{{< include "01_load.qmd" >}}
+
+# Clean data
+
+{{< include "02_clean.qmd" >}}
+
+# Augment data
+
+{{< include "03_augment.qmd" >}}
+
+# Describe data
+
+{{< include "04_describe.qmd" >}}
+
+# Analyse data
+
+{{< include "05_analysis_1.qmd" >}}
