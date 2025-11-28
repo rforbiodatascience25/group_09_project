@@ -71,13 +71,11 @@ names(sheet_list) <- sheet_names
 out_dir <- here("data", "sheets_tsv")
 
 # Write each sheet as a tsv file
-imap(
-  sheet_list,
-  function(df, sheet_name) {
-    out_file <- file.path(out_dir, paste0(sheet_name, ".tsv"))
-    write_tsv(df, out_file)
-  }
-)
+sheet_list|>
+  imap(
+    ~write_tsv(.x, str_c(out_dir, "/", .y, ".tsv")))
+  
+
 ```
 </small>
 
