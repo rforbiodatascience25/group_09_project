@@ -4,7 +4,7 @@ Selina Friesen - s252027 - SeFrie\
 Marta Sanchez Sanchez - s254791 - martasanchez99\
 Sergi Fornos - s253693 - SergiFornos\
 Tommaso Ballocci - s257151 - tobal-r\
-Ivan Musalyk - - Ivan Mus
+Ivan Musalyk - s225210 - Ivan Mus
 
 ## Project Overview
 
