@@ -3,36 +3,41 @@ title: "Project Presentation - Group 09"
 format: revealjs
 ---
 
-## Introduction \# 1
+## Introduction
 
-One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
+Where does the data come from?
 
-## Introduction #2
+![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](barcoding.png){fig-align="center"}
+
+## Introduction
+
+Where does the data come from?
+
+![](barcoding_zoom.png){fig-align="left" width="2300"}
+
+## Introduction
+
+![Focus on mapping complete SARS-CoV-2 genome](COVID_structure.png){fig-align="right" width="1500"}
 
 ## Materials and Methods #1 - Raw Data
 
-<div style="text-align:center; margin-bottom:0.2em;">
+::: {style="text-align:center; margin-bottom:0.2em;"}
 ![](Raw_data.png){width="80%"}
-</div>
+:::
 
-:::: {.columns}
-
-::: {.column width="30%"}
-<div style="text-align:center;">
+::::::: columns
+:::: {.column width="30%"}
+::: {style="text-align:center;"}
 ![](Raw_data_PEPercentage.png){width="50%"}
-</div>
 :::
-
-::: {.column width="70%"}
-
-<div style="text-align:center;">
-![](Raw_data_lastRow.png){width="90%"}
-</div>
-:::
-
 ::::
 
-
+:::: {.column width="70%"}
+::: {style="text-align:center;"}
+![](Raw_data_lastRow.png){width="90%"}
+:::
+::::
+:::::::
 
 ## Materials 2 -Loading Data
 
@@ -47,6 +52,7 @@ library(purrr)      # functional programming: map(), imap()
 ```
 
 <small>
+
 ```{r}
 #| eval: false
 #| echo: true
@@ -62,6 +68,7 @@ sheet_names <- excel_sheets(raw_file_path)
 sheet_list <- map(sheet_names, ~ read_xlsx(raw_file_path, sheet = .x))
 names(sheet_list) <- sheet_names
 ```
+
 <br>
 
 ```{r}
@@ -77,6 +84,7 @@ sheet_list|>
   
 
 ```
+
 </small>
 
 ## Materials 3
