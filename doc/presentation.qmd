@@ -1,6 +1,9 @@
 ---
 title: "Project Presentation - Group 09"
-format: revealjs
+format: 
+  revealjs:
+    slide-number: c
+    show-slide-number: all
 ---
 
 ## Introduction
@@ -11,35 +14,31 @@ Where does the data come from?
 
 ## Introduction
 
-Where does the data come from?
-
-![](barcoding_zoom.png){fig-align="left" width="2300"}
-
-## Introduction
-
 ![Focus on mapping complete SARS-CoV-2 genome](COVID_structure.png){fig-align="right" width="1500"}
 
-## Materials and Methods #1 - Raw Data
+## Materials - Raw Data
 
-::: {style="text-align:center; margin-bottom:0.2em;"}
-![](Raw_data.png){width="80%"}
+[Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a>]{style="font-size:0.6em; color:gray; margin-top:-20px;"}
+
+::: {style="text-align:center; margin-bottom:-20px; margin-top: -20px"}
+![](Raw_data.png){width="100%"}
 :::
 
 ::::::: columns
 :::: {.column width="30%"}
-::: {style="text-align:center;"}
-![](Raw_data_PEPercentage.png){width="50%"}
+::: {style="text-align:center; margin-top: -20px"}
+![](Raw_data_PEPercentage.png){width="40%"}
 :::
 ::::
 
 :::: {.column width="70%"}
-::: {style="text-align:center;"}
+::: {style="text-align:center; margin-top: -20px"}
 ![](Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
 
-## Materials 2 -Loading Data
+## Methods -Loading Data
 
 ```{r}
 #| eval: true
@@ -48,12 +47,11 @@ Where does the data come from?
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
 library(here)       # reproducible file paths
-library(purrr)      # functional programming: map(), imap()
-# Load project helper functions -----------------------------------
-source(here("R", "99_proj_func.R"))  # load_tsvData(), save_tsvData(), etc.
+library(purrr)
+source(here("R", "99_proj_func.R"))
+library(patchwork)
+# functional programming: map(), imap()
 ```
-
-<small>
 
 ```{r}
 #| eval: false
@@ -87,11 +85,9 @@ sheet_list|>
 
 ```
 
-</small>
+## Methods - Cleaning Data
 
-## Materials 3 - Cleaning Data
-
-<small>
+<small> 
 
 ::: {.column width="50%"}
 -   Combine all sheets into one table with `load_tsvData()` + `map_dfr()`
@@ -159,7 +155,7 @@ clean_data <- combined_data |>
 
 </small>
 
-## Material 4 - Augment Data
+## Methods - Augment Data
 
 <small>
 
@@ -183,7 +179,7 @@ Estimate **peptide frequency per sample**:
 ```{r}
 #| echo: true
 aug_data <- clean_data |>
-  mutate(`HLA-peptide` = paste(HLA, Peptide, sep = "-")) |>
+  mutate(`HLA-peptide` = str_c(HLA, Peptide, sep = "-")) |>
   mutate(
     response = if_else(
       log_fold_change >= 2.0 & p < 0.05,
@@ -208,13 +204,405 @@ aug_data <- clean_data |>
 
 </small>
 
-## Results and discussion 1
+## T cell responses across HLAs {.scrollable}
 
-2 people going through graphs and explain/draw biological conclusions from them.\
-Ivan and one of marta/tommaso
+```{r}
+experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
 
-## Results 2
+protein_colors <- c(
+  "ORF1" = "#009E73",
+  "S" = "#56B4E9",  
+   "ORF3"= "#D55E00",
+  "ORF6" = "#CC79A7",
+  "ORF7" = "#00AFAA",
+  "ORF8" = "#F0E442",
+  "ORF10" = "#0099BB",
+  "E" = "#0072B2",
+  "M" =  "#E69F00",
+  "N" = "#5A61FF"
+)  
 
-## results 3
+extras <- experiment_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01")))
+```
 
-## Results 4
+```{r}
+#how many peptides per HLA for positive T-responses
+extract_data <- 
+  experiment_data|>
+  mutate(HLA = str_remove(HLA, ":"))|>
+  filter(response ==1)|>
+  group_by(HLA)|>
+  summarize(peptidesPerHLA = n_distinct(Peptide))|>
+  ungroup()|>
+  #order HLA descending + fixes appearance for plotting
+  arrange(desc(HLA)) |> 
+  mutate(HLA = fct_inorder(HLA))
+
+#compute all peptides per HLA independent of positive/negative T-responses
+totalPeptidesPerHLA <- experiment_data|>
+  group_by(HLA)|>
+  summarize(totalPeptidesPerHLA = n_distinct(Peptide)) |> 
+  arrange(desc(HLA)) |> 
+  #also need the same order for combining correct values
+  mutate(HLA = fct_inorder(HLA)) |>
+  pull(totalPeptidesPerHLA)
+
+
+
+
+```
+
+. . .
+
+```{r}
+extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ HLA, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 12),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Manhattan plot showing T cell responses against SARS-CoV-2 peptides across patients, by HLAs",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+
+```
+
+. . .
+
+::: columns
+::: {.column width = "70%"}
+
+```{r}
+
+pl1 <- extract_data |>
+  ggplot(
+    aes(x= peptidesPerHLA, 
+        y = HLA)
+  ) + 
+  geom_col(aes(width = 0.5), 
+           fill = "navy")+
+  geom_text(aes(label = peptidesPerHLA), hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Number of HLA-specific\nSARS-CoV-2 epitopes")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12)
+  )
+
+pl2 <- extract_data |>
+  mutate(
+    percentage_peptides = peptidesPerHLA/totalPeptidesPerHLA * 100
+  )|>
+
+   ggplot(
+    aes(x= percentage_peptides, 
+        y = HLA)
+  ) + 
+  geom_col(aes(width = 0.5), 
+           fill = "navy")+
+  geom_text(aes(label = round(percentage_peptides, digits = 1)), 
+            hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Immunogenic peptides\n (%, normalized)")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y  = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+    plot.caption = element_text(size = 12)
+  )
+
+
+
+combined <- pl1 | pl2 +
+  plot_annotation(
+    title = "Summary of HLA frequency for tested peptides",
+    tag_levels = "A",
+    theme = theme(
+      plot.title = element_text(size = 14, hjust = 0.5)  # title size and alignment
+    )
+  )
+
+print(combined)
+```
+:::
+
+::: {.column width = "30%"}
+
+The most immunogenic HLA in this cohort appears to be HLA-A:0201. 
+::: 
+:::
+
+## Which protein generates the most immunogenic antigens? {.scrollable}
+
+```{r}
+extras <- experiment_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    Protein = factor(Protein, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
+```
+
+. . .
+
+```{r}
+  
+extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ Protein, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 12),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Manhattan plot of T cell responses against SARS-CoV-2 peptides across patients, by HLAs",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+```
+
+. . .
+
+::: columns
+:::{.column width = "70%"}
+
+```{r}
+extract_data <- experiment_data|>
+  group_by(Protein)|>
+      summarize(total = n_distinct(`HLA-peptide`),
+                number_Tcells = sum(response == 1))
+
+
+pl1 <- extract_data |>
+  ggplot(
+    aes(x = number_Tcells,
+        y = Protein,
+        fill = Protein)
+  )+
+  geom_col(aes(width = 0.5))+
+  scale_fill_manual(values = protein_colors) +
+  geom_text(aes(label = number_Tcells),hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "SARS-CoV-2\nT cell responses")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
+
+
+pl2 <- extract_data |>
+  mutate(
+    percentage_peptides = number_Tcells/total * 100
+  )|>
+  ggplot(
+    aes(x = percentage_peptides,
+        y = Protein,
+        fill = Protein)
+  )+
+  scale_fill_manual(values = protein_colors) +
+  geom_col(aes(width = 0.5))+
+  geom_text(aes(label = round(percentage_peptides, digits = 1)),hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Immunogenic peptides\n(%, normalized)")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
+  
+combined <- pl1 | pl2 +
+  plot_layout(widths = c())
+
+combined
+```
+:::
+
+:::{.column width = "30%"}
+
+Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
+:::
+:::
+## Immunogenic Epitopes Distribution {.smaller}
+
+We analyzed T-cell responses across the viral genome per patient. **ORF1** dominates due to its size, but **Spike** and **Nucleocapsid** remain major targets.
+
+```{r}
+#| label: plot-patient-dist-slides
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "100%"
+
+# --- 1. DEFINE COLORS (EXACTLY AS IN 05_ANALYSIS) ---
+protein_colors <- c(
+  "ORF1" = "#009E73", "S" = "#56B4E9", "ORF3"= "#D55E00",
+  "ORF6" = "#CC79A7", "ORF7" = "#00AFAA", "ORF8" = "#F0E442",
+  "ORF10" = "#0099BB", "E" = "#0072B2", "M" =  "#E69F00", "N" = "#5A61FF"
+)
+
+# --- 2. DATA PREP (Using your exact logic) ---
+# Ensure correct column names exist
+df_plot1 <- experiment_data
+if("estimated_frequency" %in% names(df_plot1) && !"estimatedFrequency" %in% names(df_plot1)) {
+  df_plot1 <- df_plot1 %>% rename(estimatedFrequency = estimated_frequency)
+}
+
+# Ensure Protein names are UPPERCASE to match colors (Important fix!)
+df_plot1 <- df_plot1 %>% mutate(Protein = str_to_upper(Protein))
+
+patient_protein <- df_plot1 |>
+  mutate(estimated_frequency = estimatedFrequency * 100, 
+         total_estimated_frequency = total_estimated_frequency * 100,
+         sampleID = fct_reorder(sampleID, total_estimated_frequency)) |>
+  arrange(desc(total_estimated_frequency))
+
+# --- 3. PLOT ---
+patient_protein |>
+  ggplot(aes(x = estimated_frequency, 
+             y = sampleID, 
+             fill = Protein)) +
+  geom_col(position = "stack") +
+  scale_fill_manual(values = protein_colors) +
+  scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
+  theme_minimal(base_size = 18) +
+  labs(x = "Reactive CD8 T cells (%)", 
+       y = "Patients", 
+       title = NULL) + 
+  theme(legend.position = "right")
+```
+
+## Top Immunodominant Peptides {.smaller}
+
+The plot highlights peptides recognized by **>50%** of patients with a specific HLA. These "super-epitopes" are critical candidates for peptide-based vaccines.
+
+```{r}
+#| label: plot-immunodominance-slides
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "100%"
+
+# --- 1. DATA PREP (Using your exact logic) ---
+# Ensure Protein names are UPPERCASE
+df_plot2 <- experiment_data %>% mutate(Protein = str_to_upper(Protein))
+
+# Calculate Prevalence per HLA
+hla_counts <- df_plot2 |> 
+  distinct(sampleID, HLA) |> 
+  count(HLA, name = "n_patients")
+
+valid_hlas <- hla_counts |> 
+  filter(n_patients >= 3) |> 
+  pull(HLA)
+
+prevalence_data <- df_plot2 |> 
+  filter(HLA %in% valid_hlas) |> 
+  group_by(HLA, Peptide, Protein) |> 
+  summarise(
+    total_tested = n_distinct(sampleID),
+    responders = sum(response),
+    prevalence = responders / total_tested,
+    .groups = "drop"
+  ) |> 
+  filter(prevalence > 0)
+
+# Filter for TOP immunodominant peptides
+top_peptides <- prevalence_data |> 
+  arrange(desc(prevalence)) |> 
+  slice_head(n = 20) 
+
+# --- 2. PLOT (Using fill = Protein and manual colors) ---
+ggplot(top_peptides, aes(x = prevalence, y = reorder(Peptide, prevalence), fill = Protein)) +
+  geom_col() +
+  scale_fill_manual(values = protein_colors) + # Ensuring colors match
+  geom_vline(xintercept = 0.5, linetype = 2) + 
+  scale_x_continuous(labels = scales::percent, expand = c(0, 0.05)) +
+  theme_minimal(base_size = 18) + 
+  labs(
+    title = NULL, 
+    x = "Prevalence (% of responders)",
+    y = NULL,
+    fill = "Protein"
+  ) +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(size = 14, face = "bold") 
+  )
+```

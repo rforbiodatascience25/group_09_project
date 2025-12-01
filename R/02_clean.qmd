@@ -1,7 +1,9 @@
 ---
-title: "02_clean"
+#title: "Clean Data"
 format: html
 ---
+
+# 2. Clean Data
 
 ------------------------------------------------------------------------
 
@@ -11,25 +13,29 @@ Script: **02_clean.R**
 
 **Why**: We want a single, tidy table that is easy to use in downstream analyses and visualisations.
 
-**Input**: TSV files in data/sheets_tsv/ (one per sheet).
+**Input**: TSV files in *data/sheets_tsv/(one per sheet)*.
 
 **Output**: 02_dat_clean.tsv (clean, combined dataset).
 
 ------------------------------------------------------------------------
 
 ```{r}
-# Load packages ------------------------------------------------------------
 #| warning: false
+#| message: false
+
+# Load packages ------------------------------------------------------------
 library(tidyverse)  # data wrangling, string handling, etc.
 library(here)       # reproducible file paths
 ```
 
 ```{r}
+#| message: false
+
 # Load project helper functions -----------------------------------
 source("99_proj_func.R")  # load_tsvData(), save_tsvData(), etc.
 ```
 
-Create a combined tsv
+## Create a combined tsv
 
 ```{r}
 #| warning: false
@@ -61,10 +67,10 @@ combined_data <- patient_files |>
 
 
 # Optional: inspect combined data
-combined_data
+#combined_data
 ```
 
-Extract PE+ Population = Multimer Frequency
+## Extract PE+ Population = Multimer Frequency
 
 ```{r}
 # Derive multimer frequency per sample ------------------------------------
@@ -82,19 +88,16 @@ combined_data <- combined_data |>
   ungroup()
 ```
 
-Drop last row per patient
+## Drop last row per patient
 
 ```{r}
 # Remove last / non-data rows per patient ----------------------------------
 # Here we drop rows without a barcode, which correspond to summary/empty rows.
 combined_data <- combined_data |>
   drop_na(barcode)
-
-# Optional: inspect combined data
-# combined_data
 ```
 
-Keep only important columns
+## Keep only important columns
 
 ```{r}
 # Keep only important columns ----------------------------------------------
@@ -113,11 +116,9 @@ clean_data <- combined_data |>
     MultimerFrequency
   )
 
-# Optional: inspect clean data
-clean_data
 ```
 
-Extract patient number
+## Extract patient number
 
 ```{r}
 # Extract patient ID from sample name --------------------------------------
@@ -128,12 +129,9 @@ clean_data <- clean_data |>
     sampleID = str_sub(sampleID, start = 3, end = 4)  # keep characters 3–4 → "05"
   ) |>
   relocate(sampleID, .before = sample)
-
-# Optional: inspect clean data
-# clean_data
 ```
 
-Clean HLA
+## Clean HLA name
 
 ```{r}
 # Clean HLA field -----------------------------------------------------------
@@ -144,7 +142,7 @@ clean_data <- clean_data |>
   )
 ```
 
-Extract gene
+## Extract gene
 
 ```{r}
 # Extract gene / protein information ---------------------------------------
@@ -164,10 +162,10 @@ clean_data <- clean_data |>
           Protein = str_replace(Protein, "orf1", "ORF1"))       #fix orf1 typo
 
 # Optional: inspect clean data
-clean_data
+#clean_data
 ```
 
-Save cleaned data as tsv
+## Save cleaned data as TSV
 
 ```{r}
 # Save cleaned data as TSV -------------------------------------------------

@@ -10,7 +10,7 @@ Ivan Musalyk - s225210 - Ivan Mus
 
 This repository implements the required R4BDS project structure.
 
-In this group project, we will analyse CD8+ T cell responses against SARS-CoV-2 epitopes, based on the dataset published by Saini et al., Science Immunology 2021. The aim of the project is to visualize how epitope responses are distributed across patients, what is their prevalence and which are the most immunodominant epitopes across different HLAs.
+In this group project, we will analyse CD8+ T cell responses against SARS-CoV-2 epitopes, based on the dataset published by [Saini et al., Science Immunology, 2021](https://www.science.org/doi/10.1126/sciimmunol.abf7550). The aim of the project is to visualize how epitope responses are distributed across patients, what is their prevalence and which are the most immunodominant epitopes across different HLAs.
 
 ## Data Retrieval
 
@@ -24,7 +24,7 @@ The raw data was provided by the authors of the paper upon request. This file is
 
 -   `data/02_data_clean.tsv` – combined, cleaned, tidy data
 
--   `data/03_data_augment.tsv` – wrangled data with derived variables
+-   `data/03_data_aug.tsv` – wrangled data with derived variables
 
 -   `R/01_load.qmd` – load raw data
 
@@ -32,21 +32,17 @@ The raw data was provided by the authors of the paper upon request. This file is
 
 -   `R/03_augment.qmd` – add derived variables
 
--   `R/04_describe.qmd` – descriptive statistics
+-   `R/05_analysis_1.qmd` – analysis of data
 
--   `R/05_analysis_1.qmd` – first main analysis
+-   `R/99_proj_func.qmd` – helper functions for loading and saving data
 
--   `R/06_analysis_2.qmd` – second main analysis
+-   `R/00_all.qmd` – master document to execute the full pipeline
 
--   `R/99_proj_func.qmd` – helper functions
+-   `results/` – HTML outputs of all files
 
--   `R/00_all.qmd` – master document to orchestrate the full pipeline
+-   `doc/presentation.qmd` – final project presentation as Quarto document
 
--   `results/` – HTML outputs and key plots
-
--   `doc/presentation.qmd` – final Quarto presentation
-
--   `doc/presentation.html` – rendered self-contained presentation
+-   `doc/presentation.html` – rendered project presentation
 
 ## Presentation Link
 

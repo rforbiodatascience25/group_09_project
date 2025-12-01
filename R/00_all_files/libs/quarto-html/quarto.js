@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import * as tabsets from "./tabsets/tabsets.js";
+
+>>>>>>> 874871b1668953a6766395121d963df826128ada
 const sectionChanged = new CustomEvent("quarto-sectionChanged", {
   detail: {},
   bubbles: true,
@@ -64,19 +69,54 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
     }
   };
 
+<<<<<<< HEAD
   // fire slideEnter for bootstrap tab activations (for htmlwidget resize behavior)
   function fireSlideEnter(e) {
+=======
+  // dispatch for htmlwidgets
+  // they use slideenter event to trigger resize
+  function fireSlideEnter() {
+>>>>>>> 874871b1668953a6766395121d963df826128ada
     const event = window.document.createEvent("Event");
     event.initEvent("slideenter", true, true);
     window.document.dispatchEvent(event);
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 874871b1668953a6766395121d963df826128ada
   const tabs = window.document.querySelectorAll('a[data-bs-toggle="tab"]');
   tabs.forEach((tab) => {
     tab.addEventListener("shown.bs.tab", fireSlideEnter);
   });
 
+<<<<<<< HEAD
   // fire slideEnter for tabby tab activations (for htmlwidget resize behavior)
   document.addEventListener("tabby", fireSlideEnter, false);
+=======
+  // dispatch for shiny
+  // they use BS shown and hidden events to trigger rendering
+  function distpatchShinyEvents(previous, current) {
+    if (window.jQuery) {
+      if (previous) {
+        window.jQuery(previous).trigger("hidden");
+      }
+      if (current) {
+        window.jQuery(current).trigger("shown");
+      }
+    }
+  }
+
+  // tabby.js listener: Trigger event for htmlwidget and shiny
+  document.addEventListener(
+    "tabby",
+    function (event) {
+      fireSlideEnter();
+      distpatchShinyEvents(event.detail.previousTab, event.detail.tab);
+    },
+    false
+  );
+>>>>>>> 874871b1668953a6766395121d963df826128ada
 
   // Track scrolling and mark TOC links as active
   // get table of contents and sidebar (bail if we don't have at least one)
@@ -225,7 +265,14 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
   }
 
   async function findAndActivateCategories() {
+<<<<<<< HEAD
     const currentPagePath = offsetAbsoluteUrl(window.location.href);
+=======
+    // Categories search with listing only use path without query
+    const currentPagePath = offsetAbsoluteUrl(
+      window.location.origin + window.location.pathname
+    );
+>>>>>>> 874871b1668953a6766395121d963df826128ada
     const response = await fetch(offsetRelativeUrl("listings.json"));
     if (response.status == 200) {
       return response.json().then(function (listingPaths) {
@@ -233,9 +280,16 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
         for (const listingPath of listingPaths) {
           const pathWithoutLeadingSlash = listingPath.listing.substring(1);
           for (const item of listingPath.items) {
+<<<<<<< HEAD
             if (
               item === currentPagePath ||
               item === currentPagePath + "index.html"
+=======
+            const encodedItem = encodeURI(item);
+            if (
+              encodedItem === currentPagePath ||
+              encodedItem === currentPagePath + "index.html"
+>>>>>>> 874871b1668953a6766395121d963df826128ada
             ) {
               // Resolve this path against the offset to be sure
               // we already are using the correct path to the listing
@@ -737,7 +791,11 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
 
     // See if there is an active child to this element
     let hasActiveChild = false;
+<<<<<<< HEAD
     for (child of el.children) {
+=======
+    for (const child of el.children) {
+>>>>>>> 874871b1668953a6766395121d963df826128ada
       hasActiveChild = walk(child, depth) || hasActiveChild;
     }
 
@@ -797,6 +855,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
   highlightReaderToggle(isReaderMode());
 });
 
+<<<<<<< HEAD
 // grouped tabsets
 window.addEventListener("pageshow", (_event) => {
   function getTabSettings() {
@@ -889,6 +948,9 @@ window.addEventListener("pageshow", (_event) => {
     }
   }
 });
+=======
+tabsets.init();
+>>>>>>> 874871b1668953a6766395121d963df826128ada
 
 function throttle(func, wait) {
   let waiting = false;
