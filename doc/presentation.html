@@ -219,14 +219,13 @@
 <p><img data-src="Raw_data_PEPercentage.png" style="width:40.0%"></p>
 </div>
 </div><div class="column" style="width:70%;">
-<div style="text-align:center; magrin-top: -20px">
+<div style="text-align:center; margin-top: -20px">
 <p><img data-src="Raw_data_lastRow.png" style="width:90.0%"></p>
 </div>
 </div></div>
 </section>
 <section id="methods--loading-data" class="slide level2">
 <h2>Methods -Loading Data</h2>
-<p><small></small></p><small>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="co"># Dynamically build path so the script works on any machine</span></span>
 <span id="cb1-2"><a href=""></a>raw_file_path <span class="ot">&lt;-</span> <span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"_raw"</span>, <span class="st">"AP_cohort_COVID_1_raw.xlsx"</span>)</span>
@@ -248,7 +247,6 @@
 <span id="cb2-6"><a href=""></a>  <span class="fu">imap</span>(</span>
 <span id="cb2-7"><a href=""></a>    <span class="sc">~</span><span class="fu">write_tsv</span>(.x, <span class="fu">str_c</span>(out_dir, <span class="st">"/"</span>, .y, <span class="st">".tsv"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</small><p><small></small></p>
 </section>
 <section id="methods---cleaning-data" class="slide level2">
 <h2>Methods - Cleaning Data</h2>
@@ -361,7 +359,10 @@
 </div>
 </div>
 </div><div class="column" style="width:30%;">
-<p>The most immunogenic HLA in this cohort appears to be HLA-A:0201. ::: ::::</p>
+<p>The most immunogenic HLA in this cohort appears to be HLA-A:0201.</p>
+</div></div>
+</div>
+</section>
 <section id="which-protein-generates-the-most-immunogenic-antigens" class="slide level2 scrollable">
 <h2>Which protein generates the most immunogenic antigens?</h2>
 <div class="fragment">
@@ -388,9 +389,7 @@
 </div>
 </div>
 </div><div class="column" style="width:30%;">
-<div style="font-size: 22px;">
 <p>Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.</p>
-</div>
 </div></div>
 </div>
 </section>
@@ -402,9 +401,6 @@
 <h2>Results 4</h2>
 <p>Ivan - figure 2A</p>
 
-</section>
-</div></div>
-</div>
 </section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">

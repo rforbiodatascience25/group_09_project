@@ -18,11 +18,10 @@ Where does the data come from?
 
 ## Materials - Raw Data
 
-<span style="font-size:0.6em; color:gray; margin-top:-20px;">Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a></span>
+[Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a>]{style="font-size:0.6em; color:gray; margin-top:-20px;"}
 
 ::: {style="text-align:center; margin-bottom:-20px; margin-top: -20px"}
 ![](Raw_data.png){width="100%"}
-
 :::
 
 ::::::: columns
@@ -33,12 +32,11 @@ Where does the data come from?
 ::::
 
 :::: {.column width="70%"}
-::: {style="text-align:center; magrin-top: -20px"}
+::: {style="text-align:center; margin-top: -20px"}
 ![](Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
-
 
 ## Methods -Loading Data
 
@@ -54,8 +52,6 @@ source(here("R", "99_proj_func.R"))
 library(patchwork)
 # functional programming: map(), imap()
 ```
-
-<small>
 
 ```{r}
 #| eval: false
@@ -89,11 +85,9 @@ sheet_list|>
 
 ```
 
-</small>
-
 ## Methods - Cleaning Data
 
-<small>
+<small> 
 
 ::: {.column width="50%"}
 -   Combine all sheets into one table with `load_tsvData()` + `map_dfr()`
@@ -372,7 +366,9 @@ print(combined)
 
 ::: {.column width = "30%"}
 
-The most immunogenic HLA in this cohort appears to be HLA-A:0201. ::: ::::
+The most immunogenic HLA in this cohort appears to be HLA-A:0201. 
+::: 
+:::
 
 ## Which protein generates the most immunogenic antigens? {.scrollable}
 
@@ -494,13 +490,9 @@ combined
 
 :::{.column width = "30%"}
 
-::: {style="font-size: 22px;"}
 Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
 :::
-
 :::
-
-::::
 
 ## Results 3
 
