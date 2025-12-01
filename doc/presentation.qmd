@@ -18,23 +18,27 @@ Where does the data come from?
 
 ## Materials - Raw Data
 
-::: {style="text-align:center; margin-bottom:-10px;"}
+<span style="font-size:0.6em; color:gray; margin-top:-20px;">Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a></span>
+
+::: {style="text-align:center; margin-bottom:-20px; margin-top: -20px"}
 ![](Raw_data.png){width="100%"}
+
 :::
 
 ::::::: columns
 :::: {.column width="30%"}
-::: {style="text-align:center; margin-top: -10px"}
+::: {style="text-align:center; margin-top: -20px"}
 ![](Raw_data_PEPercentage.png){width="40%"}
 :::
 ::::
 
 :::: {.column width="70%"}
-::: {style="text-align:center; magrin-top: -10px"}
+::: {style="text-align:center; magrin-top: -20px"}
 ![](Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
+
 
 ## Methods -Loading Data
 
