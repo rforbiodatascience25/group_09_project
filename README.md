@@ -32,7 +32,7 @@ The raw data was provided by the authors of the paper upon request. This file is
 
 -   `R/03_augment.qmd` – add derived variables
 
--   `R/05_analysis_1.qmd` – analysis of data
+-   `R/04_analysis.qmd` – analysis of data
 
 -   `R/99_proj_func.qmd` – helper functions for loading and saving data
 
