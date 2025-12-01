@@ -47,7 +47,7 @@ HLA-peptides (HLA-peptide combination)
 # Example: "A02:01" + "YLQPRTFLL" -> "A02:01-YLQPRTFLL"
 aug_data <- clean_data |>
   mutate(
-    'HLA-peptide' = paste(HLA, Peptide, sep = "-")
+    'HLA-peptide' = str_c(HLA, Peptide, sep = "-")
   )
 
 aug_data

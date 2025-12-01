@@ -198,14 +198,27 @@
 </div>
 
 </section>
+<section id="introduction" class="slide level2">
+<h2>Introduction</h2>
+<p>Where does the data come from?</p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="barcoding.png"></p>
+<figcaption><strong>Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology</strong></figcaption>
+</figure>
+</div>
+<p><sup>1</sup></p>
+<aside><ol class="aside-footnotes"><li id="fn1"><p>Created with biorender</p></li></ol></aside></section>
 <section id="introduction-1" class="slide level2">
-<h2>Introduction # 1</h2>
-<p>One person, 2 slides. workflow and questions to answer. one of marta/tommaso<br>
-</p>
-</section>
-<section id="introduction-2" class="slide level2">
-<h2>Introduction #2</h2>
-</section>
+<h2>Introduction</h2>
+<div class="quarto-figure quarto-figure-right">
+<figure>
+<p><img data-src="COVID_structure.png" width="1500"></p>
+<figcaption>Focus on mapping complete SARS-CoV-2 genome</figcaption>
+</figure>
+</div>
+<p><sup>1</sup></p>
+<aside><ol class="aside-footnotes"><li id="fn2"><p>Created with biorender</p></li></ol></aside></section>
 <section id="materials-and-methods-1---raw-data" class="slide level2">
 <h2>Materials and Methods #1 - Raw Data</h2>
 <div style="text-align:center; margin-bottom:0.2em;">
@@ -248,13 +261,90 @@
 </div>
 </small><p><small></small></p>
 </section>
-<section id="materials-3" class="slide level2">
-<h2>Materials 3</h2>
-<p>Cleaning Data</p>
+<section id="materials-3---cleaning-data" class="slide level2">
+<h2>Materials 3 - Cleaning Data</h2>
+<p><small></small></p><small>
+<div class="column" style="width:50%;">
+<ul>
+<li>Combine all sheets into one table with <code>load_tsvData()</code> + <code>map_dfr()</code></li>
+<li>Fix column type for <code>-log10(masked_p)</code> via <code>col_spec</code></li>
+<li>Derive <strong>MultimerFrequency per sample</strong> from frequency column (<code>...33</code>)</li>
+<li>Drop non-data rows: remove rows with missing <code>barcode</code></li>
+<li>Keep only analysis-relevant variables</li>
+<li>Create a simple <code>sampleID</code>, clean <code>HLA</code>, and tidy <code>Protein</code> names</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>combined_data <span class="ot">&lt;-</span> patient_files <span class="sc">|&gt;</span> </span>
+<span id="cb3-2"><a href=""></a>  <span class="fu">map_dfr</span>( </span>
+<span id="cb3-3"><a href=""></a>    <span class="sc">~</span><span class="fu">load_tsvData</span>( </span>
+<span id="cb3-4"><a href=""></a>      <span class="at">filename =</span> .x, </span>
+<span id="cb3-5"><a href=""></a>      <span class="at">folder =</span> tsv_folder, </span>
+<span id="cb3-6"><a href=""></a>      <span class="at">col_types =</span> col_spec, </span>
+<span id="cb3-7"><a href=""></a>      <span class="at">na =</span> <span class="fu">c</span>(<span class="st">"NA"</span>, <span class="st">"N/A"</span>, <span class="st">"---"</span>), </span>
+<span id="cb3-8"><a href=""></a>      <span class="at">show_col_types =</span> <span class="cn">FALSE</span> </span>
+<span id="cb3-9"><a href=""></a>      ) </span>
+<span id="cb3-10"><a href=""></a>    ) <span class="sc">|&gt;</span> </span>
+<span id="cb3-11"><a href=""></a>  <span class="fu">group_by</span>(sample) <span class="sc">|&gt;</span> </span>
+<span id="cb3-12"><a href=""></a>  <span class="fu">rename</span>(<span class="at">freq =</span> ...<span class="dv">33</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb3-13"><a href=""></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-14"><a href=""></a>    <span class="at">MultimerFrequency =</span> <span class="fu">sum</span>(<span class="fu">replace_na</span>(freq, <span class="dv">0</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb3-15"><a href=""></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb3-16"><a href=""></a>  <span class="fu">drop_na</span>(barcode)</span>
+<span id="cb3-17"><a href=""></a></span>
+<span id="cb3-18"><a href=""></a>clean_data <span class="ot">&lt;-</span> combined_data <span class="sc">|&gt;</span> </span>
+<span id="cb3-19"><a href=""></a>  <span class="fu">select</span>( </span>
+<span id="cb3-20"><a href=""></a>    sample, count<span class="fl">.1</span>, input<span class="fl">.1</span>, input<span class="fl">.2</span>, input<span class="fl">.3</span>,</span>
+<span id="cb3-21"><a href=""></a>    log_fold_change, p, HLA, Protein, Peptide,</span>
+<span id="cb3-22"><a href=""></a>    MultimerFrequency ) <span class="sc">|&gt;</span> </span>
+<span id="cb3-23"><a href=""></a>  <span class="fu">mutate</span>( </span>
+<span id="cb3-24"><a href=""></a>    <span class="at">sampleID =</span> <span class="fu">str_remove</span>(sample, <span class="st">"_.*$"</span>), </span>
+<span id="cb3-25"><a href=""></a>    <span class="at">sampleID =</span> <span class="fu">str_sub</span>(sampleID, <span class="at">start =</span> <span class="dv">3</span>, <span class="at">end =</span> <span class="dv">4</span>), </span>
+<span id="cb3-26"><a href=""></a>    <span class="at">HLA =</span> <span class="fu">str_remove</span>(HLA, <span class="st">"HLA-"</span>) )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div></small><p><small></small></p>
 </section>
-<section id="material-4" class="slide level2">
-<h2>Material 4</h2>
-<p>Augment Data</p>
+<section id="material-4---augment-data" class="slide level2">
+<h2>Material 4 - Augment Data</h2>
+<p><small></small></p><small>
+<div class="column" style="width:50%;">
+<p>From cleaned dataset <code>02_data_clean.tsv</code></p>
+<p>Add <strong>HLA–peptide identifier</strong>: <code>HLA-peptide</code></p>
+<p>Define <strong>binary response</strong>: <code>log_fold_change &gt;= 2</code> and <code>p &lt; 0.05</code> → response = 1</p>
+<p>Compute <strong>response_count per sample</strong>: sum of <code>count.1</code> for responses</p>
+<p>Estimate <strong>peptide frequency per sample</strong>:</p>
+<ul>
+<li><code>estimated_frequency</code> for responding rows:
+<ul>
+<li><code>count.1 / response_count * MultimerFrequency</code></li>
+</ul></li>
+<li>non-responders or no responses → 0</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>aug_data <span class="ot">&lt;-</span> clean_data <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href=""></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">HLA-peptide</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">str_c</span>(HLA, Peptide, <span class="at">sep =</span> <span class="st">"-"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href=""></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-4"><a href=""></a>    <span class="at">response =</span> <span class="fu">if_else</span>(</span>
+<span id="cb4-5"><a href=""></a>      log_fold_change <span class="sc">&gt;=</span> <span class="fl">2.0</span> <span class="sc">&amp;</span> p <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb4-6"><a href=""></a>      <span class="dv">1</span>L, <span class="dv">0</span>L</span>
+<span id="cb4-7"><a href=""></a>    )</span>
+<span id="cb4-8"><a href=""></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb4-9"><a href=""></a>  <span class="fu">group_by</span>(sample) <span class="sc">|&gt;</span></span>
+<span id="cb4-10"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">response_count =</span> <span class="fu">sum</span>(count<span class="fl">.1</span> <span class="sc">*</span> response)) <span class="sc">|&gt;</span></span>
+<span id="cb4-11"><a href=""></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a href=""></a>  <span class="fu">mutate</span>(</span>
+<span id="cb4-13"><a href=""></a>    <span class="at">estimated_frequency =</span> <span class="fu">case_when</span>(</span>
+<span id="cb4-14"><a href=""></a>      response_count <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb4-15"><a href=""></a>      response <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> (count<span class="fl">.1</span> <span class="sc">/</span> response_count) <span class="sc">*</span> MultimerFrequency,</span>
+<span id="cb4-16"><a href=""></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb4-17"><a href=""></a>    )</span>
+<span id="cb4-18"><a href=""></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb4-19"><a href=""></a>  <span class="fu">group_by</span>(sample) <span class="sc">|&gt;</span></span>
+<span id="cb4-20"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">total_estimated_frequency =</span> <span class="fu">sum</span>(estimated_frequency)) <span class="sc">|&gt;</span></span>
+<span id="cb4-21"><a href=""></a>  <span class="fu">ungroup</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div></small><p><small></small></p>
 </section>
 <section id="t-cell-responses-across-hlas" class="slide level2 scrollable">
 <h2>T cell responses across HLAs</h2>
@@ -327,6 +417,7 @@
 <p>Ivan - figure 2A</p>
 
 </section>
+
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
@@ -383,7 +474,7 @@
         progress: true,
 
         // Display the page number of the current slide
-        slideNumber: false,
+        slideNumber: 'c',
 
         // 'all', 'print', or 'speaker'
         showSlideNumber: 'all',
