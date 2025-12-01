@@ -423,8 +423,6 @@ extras |>
 . . .
 
 ::: {.columns style="width: 70%"}
-:::{.column width = "70%"}
-
 ```{r}
 extract_data <- experiment_data|>
   group_by(Protein)|>
@@ -488,7 +486,9 @@ combined
 
 :::{.column width = "30%"}
 
-Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3. ::: :::
+Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
+
+:::
 
 ## Immunogenic Epitopes Distribution {.smaller}
 
