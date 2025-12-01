@@ -1,4 +1,5 @@
 ## Project Contributors
+
 Group09:\
 Selina Friesen - s252027 - SeFrie\
 Marta Sanchez Sanchez - s254791 - martasanchez99\
@@ -46,6 +47,4 @@ The raw data was provided by the authors of the paper upon request. This file is
 
 ## Presentation Link
 
-Add the direct link generated with raw.githack, for example:
-
-<https://raw.githack.com/><org>/<repo>/<branch>/doc/presentation.html
+<https://raw.githack.com/rforbiodatascience25/group_09_project/main/doc/presentation.html>
