@@ -1,52 +1,59 @@
 ---
 title: "Project Presentation - Group 09"
 format: revealjs
+incremental: true
+slide-level: 2
 ---
+
 
 ## Introduction \# 1
 
 One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
 
+
+
 ## Introduction #2
+
+
 
 ## Materials and Methods #1 - Raw Data
 
-<div style="text-align:center; margin-bottom:0.2em;">
+::: {style="text-align:center; margin-bottom:0.2em;"}
 ![](Raw_data.png){width="80%"}
-</div>
+:::
 
-:::: {.columns}
-
-::: {.column width="30%"}
-<div style="text-align:center;">
+::::::: columns
+:::: {.column width="30%"}
+::: {style="text-align:center;"}
 ![](Raw_data_PEPercentage.png){width="50%"}
-</div>
 :::
-
-::: {.column width="70%"}
-
-<div style="text-align:center;">
-![](Raw_data_lastRow.png){width="90%"}
-</div>
-:::
-
 ::::
 
+:::: {.column width="70%"}
+::: {style="text-align:center;"}
+![](Raw_data_lastRow.png){width="90%"}
+:::
+::::
+:::::::
 
 
 ## Materials 2 -Loading Data
 
 ```{r}
-#| eval: false
+#| eval: true
 #| echo: false
 # Load libraries -----------------------------------------------------------
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
 library(here)       # reproducible file paths
-library(purrr)      # functional programming: map(), imap()
+library(purrr)
+source(here("R", "99_proj_func.R"))
+library(patchwork)
+# functional programming: map(), imap()
 ```
 
 <small>
+
 ```{r}
 #| eval: false
 #| echo: true
@@ -62,6 +69,7 @@ sheet_names <- excel_sheets(raw_file_path)
 sheet_list <- map(sheet_names, ~ read_xlsx(raw_file_path, sheet = .x))
 names(sheet_list) <- sheet_names
 ```
+
 <br>
 
 ```{r}
@@ -77,23 +85,324 @@ sheet_list|>
   
 
 ```
+
 </small>
+
 
 ## Materials 3
 
 Cleaning Data
 
+
 ## Material 4
 
 Augment Data
 
-## Results and discussion 1
 
-2 people going through graphs and explain/draw biological conclusions from them.\
-Ivan and one of marta/tommaso
+## T cell responses across HLAs {.scrollable}
 
-## Results 2
+```{r}
+experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
 
-## results 3
+protein_colors <- c(
+  "ORF1" = "#009E73",
+  "S" = "#56B4E9",  
+   "ORF3"= "#D55E00",
+  "ORF6" = "#CC79A7",
+  "ORF7" = "#00AFAA",
+  "ORF8" = "#F0E442",
+  "ORF10" = "#0099BB",
+  "E" = "#0072B2",
+  "M" =  "#E69F00",
+  "N" = "#5A61FF"
+)  
+
+extras <- experiment_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01")))
+```
+
+```{r}
+#how many peptides per HLA for positive T-responses
+extract_data <- 
+  experiment_data|>
+  mutate(HLA = str_remove(HLA, ":"))|>
+  filter(response ==1)|>
+  group_by(HLA)|>
+  summarize(peptidesPerHLA = n_distinct(Peptide))|>
+  ungroup()|>
+  #order HLA descending + fixes appearance for plotting
+  arrange(desc(HLA)) |> 
+  mutate(HLA = fct_inorder(HLA))
+
+#compute all peptides per HLA independent of positive/negative T-responses
+totalPeptidesPerHLA <- experiment_data|>
+  group_by(HLA)|>
+  summarize(totalPeptidesPerHLA = n_distinct(Peptide)) |> 
+  arrange(desc(HLA)) |> 
+  #also need the same order for combining correct values
+  mutate(HLA = fct_inorder(HLA)) |>
+  pull(totalPeptidesPerHLA)
+
+
+
+
+```
+
+. . .
+
+```{r}
+extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ HLA, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 12),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Manhattan plot showing T cell responses against SARS-CoV-2 peptides across patients, by HLAs",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+
+```
+. . .
+
+:::: {.columns}
+::: {.column width = "70%"}
+
+```{r}
+
+pl1 <- extract_data |>
+  ggplot(
+    aes(x= peptidesPerHLA, 
+        y = HLA)
+  ) + 
+  geom_col(aes(width = 0.5), 
+           fill = "navy")+
+  geom_text(aes(label = peptidesPerHLA), hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Number of HLA-specific\nSARS-CoV-2 epitopes")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12)
+  )
+
+pl2 <- extract_data |>
+  mutate(
+    percentage_peptides = peptidesPerHLA/totalPeptidesPerHLA * 100
+  )|>
+
+   ggplot(
+    aes(x= percentage_peptides, 
+        y = HLA)
+  ) + 
+  geom_col(aes(width = 0.5), 
+           fill = "navy")+
+  geom_text(aes(label = round(percentage_peptides, digits = 1)), 
+            hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Immunogenic peptides\n (%, normalized)")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y  = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+    plot.caption = element_text(size = 12)
+  )
+
+
+
+combined <- pl1 | pl2 +
+  plot_annotation(
+    title = "Summary of HLA frequency for tested peptides",
+    tag_levels = "A",
+    theme = theme(
+      plot.title = element_text(size = 14, hjust = 0.5)  # title size and alignment
+    )
+  )
+
+print(combined)
+```
+:::
+
+::: {.column width = "30%"}
+
+The most immunogenic HLA in this cohort appears to be HLA-A:0201.
+::: 
+::::
+
+
+## Which protein generates the most immunogenic antigens? {.scrollable}
+
+```{r}
+extras <- experiment_data |>
+  mutate(
+    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
+    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
+    Protein = factor(Protein, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
+```
+
+. . .
+
+```{r}
+  
+extras |> 
+    ggplot(aes(
+    x = `HLA-peptide`,
+    y = log_fold_change,
+    colour = point_color,
+    fill   = point_fill,
+    size = estimatedFrequency
+  )) +
+  geom_point() +
+
+  facet_grid(~ Protein, scales = "free_x", space = "free") +
+  geom_hline(yintercept = 2, linetype = "dashed") +
+  scale_color_identity(guide = "none") +   
+  scale_fill_identity(guide = "none") +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
+  #scale_y_break(breaks = c(0, 2)) +
+ theme(
+  panel.spacing = unit(0, "lines"),  
+  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
+  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
+  legend.position = "bottom",
+   axis.text.y.right = element_blank(),
+  axis.ticks.y.right = element_blank(),
+  strip.background = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y.left = element_text(size = 12),
+  title = element_text(size = 12),
+    legend.title = element_text(size = 10)
+
+   ) +
+
+  labs(title = "Manhattan plot of T cell responses against SARS-CoV-2 peptides across patients, by HLAs",
+       x = "Peptide HLA pairs",
+       y = "Log fold change",
+       size = "Estimated frequency"
+) 
+```
+
+. . .
+
+:::: {.columns}
+
+:::{.column width = "70%"}
+
+```{r}
+extract_data <- experiment_data|>
+  group_by(Protein)|>
+      summarize(total = n_distinct(`HLA-peptide`),
+                number_Tcells = sum(response == 1))
+
+
+pl1 <- extract_data |>
+  ggplot(
+    aes(x = number_Tcells,
+        y = Protein,
+        fill = Protein)
+  )+
+  geom_col(aes(width = 0.5))+
+  scale_fill_manual(values = protein_colors) +
+  geom_text(aes(label = number_Tcells),hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "SARS-CoV-2\nT cell responses")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
+
+
+pl2 <- extract_data |>
+  mutate(
+    percentage_peptides = number_Tcells/total * 100
+  )|>
+  ggplot(
+    aes(x = percentage_peptides,
+        y = Protein,
+        fill = Protein)
+  )+
+  scale_fill_manual(values = protein_colors) +
+  geom_col(aes(width = 0.5))+
+  geom_text(aes(label = round(percentage_peptides, digits = 1)),hjust = -0.2)+
+  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
+  labs(caption = "Immunogenic peptides\n(%, normalized)")+
+  theme(aspect.ratio = 2/1, 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_line(color = "black"),
+        axis.line = element_line(color = "black"),    
+        panel.background = element_rect(fill = "white"),
+        plot.caption = element_text(size = 12),
+        legend.position = "none"
+  )
+  
+combined <- pl1 | pl2 +
+  plot_layout(widths = c())
+
+combined
+```
+:::
+
+ 
+:::{.column width = "30%"}
+
+<div style= "font-size: 22px;">
+
+Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
+
+</div>
+
+:::
+
+::::
+
+## Results 3
+
+Ivan - figure 1I
+
+
 
 ## Results 4
+
+Ivan - figure 2A

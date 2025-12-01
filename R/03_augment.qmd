@@ -76,10 +76,7 @@ Estimated Frequency (based on the authors:
 
 ```{r}
 # Estimate peptide frequency per sample -------------------------------------
-#   ResponseCount (per sample) = sum(count.1 * response)
-#   estimated_frequency (for responding rows only) =
-#       count.1 / ResponseCount * MultimerFrequency
-#   If ResponseCount == 0, set estimated_frequency = 0
+
 aug_data <- aug_data |>
   group_by(sample) |>
   mutate(

@@ -3,20 +3,7 @@ title: "05_analysis_1"
 format: html
 ---
 
-```{r}
-# First main analysis
-# e.g. immunodominance landscape similar to Fig. 1E
-```
-
 ## Load the libraries
-
-```{r}
-library(dplyr) # better load tidyverse, already included there
-library(ggplot2) # better load tidyverse, already included there
-#library(ggbreak)
-#library(ggforce)
-
-```
 
 ```{r}
 library("here")
@@ -31,40 +18,36 @@ source("99_proj_func.R")
 ## Load data
 
 ```{r}
-experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
+experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
 ```
 
-# Plot 1E
+# Manhattan plot: Immunogenic peptides, sorted by HLAs
 
-```{r}
-#goodone
-
-#we need to do it in clean
-complete_data <- aug_data |>
-  mutate(Protein = str_to_upper(Protein))
-  
+```{r, fig.width= 11, fig.height= 6, dpi = 200}
 
 protein_colors <- c(
-  "ORF1" = "#1f77b4",
-  "S" = "#ff7f0e",  
-   "ORF3"= "#2ca02c",
-  "ORF6" = "pink",
-  "ORF7" = "red",
-  "ORF8" = "lightblue",
-  "ORF10" = "yellow",
-  "E" = "purple",
-  "M" = "darkblue",
-  "N" = "darkred"
+  "ORF1" = "#009E73",
+  "S" = "#56B4E9",  
+   "ORF3"= "#D55E00",
+  "ORF6" = "#CC79A7",
+  "ORF7" = "#00AFAA",
+  "ORF8" = "#F0E442",
+  "ORF10" = "#0099BB",
+  "E" = "#0072B2",
+  "M" =  "#E69F00",
+  "N" = "#5A61FF"
 )
 
-extras <- complete_data |>
+
+manhattan_HLA <- experiment_data |>
   mutate(
     point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
     point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
-    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01")))
+    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01"))) 
+
   
   
-  extras |> 
+manhattan_HLA |> 
     ggplot(aes(
     x = `HLA-peptide`,
     y = log_fold_change,
@@ -90,12 +73,12 @@ extras <- complete_data |>
   strip.background = element_blank(),
   axis.text.x = element_blank(),
   axis.text.y.left = element_text(size = 12),
-  title = element_text(size = 16),
+  title = element_text(size = 14),
     legend.title = element_text(size = 10)
 
    ) +
 
-  labs(title = "HLA",
+  labs(title = "Manhattan plot of T cell responses against SARS-CoV-2 antigens, sorted by HLA",
        x = "Peptide HLA pairs",
        y = "Log fold change",
        size = "Estimated frequency"
@@ -103,12 +86,14 @@ extras <- complete_data |>
 
 ```
 
-# Plot 1F - Identified HLA-specific SARS-CoV-2 epitopes and HLA-restricted immunogenicity
+In this plot, we can appreciate the distribution of immunogenic peptides across different HLAs, by displaying the estimated frequency of each peptide-HLA pair in the patient cohort.
+
+# Summary bar plot: Peptides distribution across HLAs
 
 ```{r}
 
 #how many peptides per HLA for positive T-responses
-extract_data <- 
+summary_HLA <- 
   experiment_data|>
   mutate(HLA = str_remove(HLA, ":"))|>
   filter(response ==1)|>
@@ -131,7 +116,7 @@ totalPeptidesPerHLA <- experiment_data|>
 
 
 
-pl1 <- extract_data |>
+pl1 <- summary_HLA |>
   ggplot(
     aes(x= peptidesPerHLA, 
         y = HLA)
@@ -150,7 +135,7 @@ pl1 <- extract_data |>
         plot.caption = element_text(size = 12)
   )
 
-pl2 <- extract_data |>
+pl2 <- summary_HLA |>
   mutate(
     percentage_peptides = peptidesPerHLA/totalPeptidesPerHLA * 100
   )|>
@@ -177,52 +162,33 @@ pl2 <- extract_data |>
   
 
 
-combined <- pl1 | pl2 +
+combined_HLAs <- pl1 | pl2 +
   plot_layout(widths = c())
 
-combined
+combined_HLAs
 ```
 
-The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA.\
+The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that had a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA.\
 This highlights the absolute and relative immunogenicity of different HLA types.
 
-# Plot 1G
+# Manhattan plot: Immunogenic peptides, sorted by protein of origin
 
-```{r}
-#goodone
+```{r, fig.width= 11, fig.height= 6, dpi= 200}
 
-#we need to do it in clean
-complete_data <- experiment_data |>
-  mutate(Protein = str_to_upper(Protein))
-  
-
-protein_colors <- c(
-  "ORF1" = "#1f77b4",
-  "S" = "#ff7f0e",  
-   "ORF3"= "#2ca02c",
-  "ORF6" = "pink",
-  "ORF7" = "red",
-  "ORF8" = "lightblue",
-  "ORF10" = "yellow",
-  "E" = "purple",
-  "M" = "darkblue",
-  "N" = "darkred"
-)
-
-extras <- complete_data |>
+manhattan_protein <- experiment_data |>
   mutate(
     point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
     point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
-    HLA = factor(HLA, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
+    Protein = factor(Protein, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
   
   
-  extras |> 
+manhattan_protein |> 
     ggplot(aes(
     x = `HLA-peptide`,
     y = log_fold_change,
     colour = point_color,
     fill   = point_fill,
-    size = estimatedFrequency
+    size = estimated_frequency
   )) +
   geom_point() +
 
@@ -242,12 +208,12 @@ extras <- complete_data |>
   strip.background = element_blank(),
   axis.text.x = element_blank(),
   axis.text.y.left = element_text(size = 12),
-  title = element_text(size = 16),
+  title = element_text(size = 14),
     legend.title = element_text(size = 10)
 
    ) +
 
-  labs(title = "Protein",
+  labs(title = "Manhattan plot of T cell responses against SARS-CoV-2 peptides across patients, by protein",
        x = "Peptide HLA pairs",
        y = "Log fold change",
        size = "Estimated frequency"
@@ -255,22 +221,25 @@ extras <- complete_data |>
 
 ```
 
-# Plot 1H - Epitopes derived from each SARS-CoV protein and their immunogenicity score
+This plot gives an overview of how immunogenic peptides are spread across various proteins of origin, keeping into account their estimated frequency in the patient cohort.
+
+# Summary bar plot: peptides distribution across protein of origin
 
 ```{r}
-extract_data <- experiment_data|>
+summary_protein <- experiment_data|>
   group_by(Protein)|>
       summarize(total = n_distinct(`HLA-peptide`),
                 number_Tcells = sum(response == 1))
 
 
-pl1 <- extract_data |>
+pl1 <- summary_protein |>
   ggplot(
     aes(x = number_Tcells,
         y = Protein,
         fill = Protein)
   )+
   geom_col(aes(width = 0.5))+
+  scale_fill_manual(values  = protein_colors) +
   geom_text(aes(label = number_Tcells),hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
   labs(caption = "SARS-CoV-2\nT cell responses")+
@@ -285,7 +254,7 @@ pl1 <- extract_data |>
   )
 
 
-pl2 <- extract_data |>
+pl2 <- summary_protein |>
   mutate(
     percentage_peptides = number_Tcells/total * 100
   )|>
@@ -295,6 +264,7 @@ pl2 <- extract_data |>
         fill = Protein)
   )+
   geom_col(aes(width = 0.5))+
+  scale_fill_manual(values  = protein_colors) +
   geom_text(aes(label = round(percentage_peptides, digits = 1)),hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
   labs(caption = "Immunogenic peptides\n(%, normalized)")+
@@ -309,49 +279,121 @@ pl2 <- extract_data |>
         legend.position = "none"
   )
   
-combined <- pl1 | pl2 +
+combined_protein <- pl1 | pl2 +
   plot_layout(widths = c())
 
-combined
+combined_protein
 ```
 
 The plot compares, for each SARS-CoV-2 protein, the total number of HLA-peptide combination that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides relative to all detected peptides of that protein.\
-This highlights the absolute and relative immunogenicity of different protein types.
+This highlights the absolute and relative immunogenicity of different proteins.
 
-# Plot 1I- frequency of epitopes across proteins of origin
+# Patient-based distributions of peptides across proteins of origin
 
-It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
+It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes, for each patient in the cohort. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
 
-```{r}
-augmented_data <- experiment_data |>
-  mutate(estimatedFrequency = estimatedFrequency*100, #converts into percentage
+```{r, fig.width= 11, fig.height= 6, dpi = 200}
+patient_protein <- experiment_data |>
+  mutate(estimated_frequency = estimated_frequency*100, #converts into percentage
          total_estimated_frequency = total_estimated_frequency*100,
          sampleID = fct_reorder(sampleID, total_estimated_frequency)) |>
   arrange(desc(total_estimated_frequency))
 
-
-
-palette10 <- c(
-  "#E69F00", "#56B4E9", "#009E73","#00AFAA", "#0072B2","#D55E00", "#CC79A7", "#F0E442","#0099BB", "#5A61FF")
-
-
-
-augmented_data|>
-ggplot(aes(x = estimatedFrequency, 
+patient_protein|>
+ggplot(aes(x = estimated_frequency, 
            y = sampleID, 
            fill = Protein)) +
   geom_col( position = "stack") +
-  scale_fill_manual(values  = palette10) +
+  scale_fill_manual(values  = protein_colors) +
   scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
   labs( x = "SARS-CoV-2 reactive CD8 T cells (%)", 
         y = "Samples", 
         title = "Frequency of SARS-CoV-2 reactive CD8 T cells in patients with COVID19, distributed across protein of origin")
 ```
 
-As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1). However, we can perform some normalization to calculate the percentage of immunogenic peptides that arise from each gene. (Selina's figures).
+As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1).
 
-# Plot 2A - funny plot
+# Identifying immunodominant peptides
+
+At last, we are interested in identifying which peptides are conserved across patients, keeping in mind the restrictions guided by HLA haplotypes. We will define immunodominant, those peptide-HLA for which a T cell population was identified in \>= 50 % of the patients carrying given HLA.
+
+### Concept of Immunodominance
+
+Immunodominance refers to the phenomenon where the immune system focuses its response on a small fraction of the available viral peptides. Even though SARS-CoV-2 has thousands of potential epitopes, only a select few trigger a strong T-cell response in the majority of patients.
+
+Identifying these "immunodominant" epitopes is crucial for **vaccine design**, as a good vaccine must include these key targets to ensure broad protection across the population (especially considering different HLA types).
+
+### Visualization
+
+The bar plot below shows the **Prevalence** of the top immunodominant peptides within their respective HLA groups.
+
+```{r}
+#| label: plot-ivan
+#| fig-width: 10
+#| fig-height: 8
+
+# --- Pre-processing for Ivan's plots ---
+# Ensure we have consistent column names and a binary response variable
+df_analysis <- experiment_data
+
+if("sampleID" %in% names(df_analysis)) df_analysis <- rename(df_analysis, patient_id = sampleID)
+if("Protein" %in% names(df_analysis))  df_analysis <- rename(df_analysis, ORF = Protein)
+if("Peptide" %in% names(df_analysis))  df_analysis <- rename(df_analysis, peptide = Peptide)
+if("HLA" %in% names(df_analysis))      df_analysis <- mutate(df_analysis, HLA = str_remove(HLA, "HLA-"))
+
+# Create response_binary if missing (p < 0.05)
+if(!"response_binary" %in% names(df_analysis)) {
+  if("p" %in% names(df_analysis)) {
+      df_analysis <- df_analysis %>% mutate(response_binary = if_else(p < 0.05, 1, 0))
+  }
+}
+
+
+```
 
 ```{r}
 
+# --- Calculation ---
+# 1. Calculate Prevalence per HLA
+hla_counts <- experiment_data |> 
+  distinct(sampleID, HLA) |> 
+  count(HLA, name = "n_patients")
+
+valid_hlas <- hla_counts |> 
+  filter(n_patients >= 3) |> 
+  pull(HLA)
+
+prevalence_data <- experiment_data |> 
+  filter(HLA %in% valid_hlas) |> 
+  group_by(HLA, Peptide, Protein) |> 
+  summarise(
+    total_tested = n_distinct(sampleID),
+    responders = sum(response),
+    prevalence = responders / total_tested,
+    .groups = "drop"
+  ) |> 
+  filter(prevalence > 0)
+
+# 2. Filter for TOP immunodominant peptides
+top_peptides <- prevalence_data |> 
+  arrange(desc(prevalence)) |> 
+  slice_head(n = 20) # Take top 20 strongest responses
+
+# 3. Barplot
+ggplot(top_peptides, aes(x = prevalence, y = reorder(Peptide, prevalence), fill = Protein)) +
+  geom_col() +
+  scale_fill_manual(values = protein_colors) +
+  geom_vline(xintercept = 0.5, linetype = 2) +
+  scale_x_continuous(labels = scales::percent, expand = c(0, 0.05)) +
+    labs(
+    title = "Top Immunodominant SARS-CoV-2 Epitopes",
+    subtitle = "Peptides with highest response frequency within HLA groups (Top 20 shown)",
+    x = "Prevalence (% of responders)",
+    y = "Peptide",
+    fill = "Protein"
+  ) +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(size = 8)
+  )
 ```
