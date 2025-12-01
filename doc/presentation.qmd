@@ -493,11 +493,116 @@ combined
 Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
 :::
 :::
+## Immunogenic Epitopes Distribution {.smaller}
 
-## Results 3
+We analyzed T-cell responses across the viral genome per patient. **ORF1** dominates due to its size, but **Spike** and **Nucleocapsid** remain major targets.
 
-Ivan - figure 1I
+```{r}
+#| label: plot-patient-dist-slides
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "100%"
 
-## Results 4
+# --- 1. DEFINE COLORS (EXACTLY AS IN 05_ANALYSIS) ---
+protein_colors <- c(
+  "ORF1" = "#009E73", "S" = "#56B4E9", "ORF3"= "#D55E00",
+  "ORF6" = "#CC79A7", "ORF7" = "#00AFAA", "ORF8" = "#F0E442",
+  "ORF10" = "#0099BB", "E" = "#0072B2", "M" =  "#E69F00", "N" = "#5A61FF"
+)
 
-Ivan - figure 2A
+# --- 2. DATA PREP (Using your exact logic) ---
+# Ensure correct column names exist
+df_plot1 <- experiment_data
+if("estimated_frequency" %in% names(df_plot1) && !"estimatedFrequency" %in% names(df_plot1)) {
+  df_plot1 <- df_plot1 %>% rename(estimatedFrequency = estimated_frequency)
+}
+
+# Ensure Protein names are UPPERCASE to match colors (Important fix!)
+df_plot1 <- df_plot1 %>% mutate(Protein = str_to_upper(Protein))
+
+patient_protein <- df_plot1 |>
+  mutate(estimated_frequency = estimatedFrequency * 100, 
+         total_estimated_frequency = total_estimated_frequency * 100,
+         sampleID = fct_reorder(sampleID, total_estimated_frequency)) |>
+  arrange(desc(total_estimated_frequency))
+
+# --- 3. PLOT ---
+patient_protein |>
+  ggplot(aes(x = estimated_frequency, 
+             y = sampleID, 
+             fill = Protein)) +
+  geom_col(position = "stack") +
+  scale_fill_manual(values = protein_colors) +
+  scale_x_continuous(breaks= c(0, 5, 10, 15, 20, 25)) +
+  theme_minimal(base_size = 18) +
+  labs(x = "Reactive CD8 T cells (%)", 
+       y = "Patients", 
+       title = NULL) + 
+  theme(legend.position = "right")
+```
+
+## Top Immunodominant Peptides {.smaller}
+
+The plot highlights peptides recognized by **>50%** of patients with a specific HLA. These "super-epitopes" are critical candidates for peptide-based vaccines.
+
+```{r}
+#| label: plot-immunodominance-slides
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "100%"
+
+# --- 1. DATA PREP (Using your exact logic) ---
+# Ensure Protein names are UPPERCASE
+df_plot2 <- experiment_data %>% mutate(Protein = str_to_upper(Protein))
+
+# Calculate Prevalence per HLA
+hla_counts <- df_plot2 |> 
+  distinct(sampleID, HLA) |> 
+  count(HLA, name = "n_patients")
+
+valid_hlas <- hla_counts |> 
+  filter(n_patients >= 3) |> 
+  pull(HLA)
+
+prevalence_data <- df_plot2 |> 
+  filter(HLA %in% valid_hlas) |> 
+  group_by(HLA, Peptide, Protein) |> 
+  summarise(
+    total_tested = n_distinct(sampleID),
+    responders = sum(response),
+    prevalence = responders / total_tested,
+    .groups = "drop"
+  ) |> 
+  filter(prevalence > 0)
+
+# Filter for TOP immunodominant peptides
+top_peptides <- prevalence_data |> 
+  arrange(desc(prevalence)) |> 
+  slice_head(n = 20) 
+
+# --- 2. PLOT (Using fill = Protein and manual colors) ---
+ggplot(top_peptides, aes(x = prevalence, y = reorder(Peptide, prevalence), fill = Protein)) +
+  geom_col() +
+  scale_fill_manual(values = protein_colors) + # Ensuring colors match
+  geom_vline(xintercept = 0.5, linetype = 2) + 
+  scale_x_continuous(labels = scales::percent, expand = c(0, 0.05)) +
+  theme_minimal(base_size = 18) + 
+  labs(
+    title = NULL, 
+    x = "Prevalence (% of responders)",
+    y = NULL,
+    fill = "Protein"
+  ) +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(size = 14, face = "bold") 
+  )
+```
