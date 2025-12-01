@@ -11,42 +11,40 @@ One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
 
 ## Materials and Methods #1 - Raw Data
 
-<div style="text-align:center; margin-bottom:0.2em;">
+::: {style="text-align:center; margin-bottom:0.2em;"}
 ![](Raw_data.png){width="80%"}
-</div>
+:::
 
-:::: {.columns}
-
-::: {.column width="30%"}
-<div style="text-align:center;">
+::::::: columns
+:::: {.column width="30%"}
+::: {style="text-align:center;"}
 ![](Raw_data_PEPercentage.png){width="50%"}
-</div>
 :::
-
-::: {.column width="70%"}
-
-<div style="text-align:center;">
-![](Raw_data_lastRow.png){width="90%"}
-</div>
-:::
-
 ::::
 
-
+:::: {.column width="70%"}
+::: {style="text-align:center;"}
+![](Raw_data_lastRow.png){width="90%"}
+:::
+::::
+:::::::
 
 ## Materials 2 -Loading Data
 
 ```{r}
-#| eval: false
+#| eval: true
 #| echo: false
 # Load libraries -----------------------------------------------------------
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
 library(here)       # reproducible file paths
 library(purrr)      # functional programming: map(), imap()
+# Load project helper functions -----------------------------------
+source(here("R", "99_proj_func.R"))  # load_tsvData(), save_tsvData(), etc.
 ```
 
 <small>
+
 ```{r}
 #| eval: false
 #| echo: true
@@ -62,6 +60,7 @@ sheet_names <- excel_sheets(raw_file_path)
 sheet_list <- map(sheet_names, ~ read_xlsx(raw_file_path, sheet = .x))
 names(sheet_list) <- sheet_names
 ```
+
 <br>
 
 ```{r}
@@ -77,15 +76,127 @@ sheet_list|>
   
 
 ```
+
 </small>
 
-## Materials 3
+## Materials 3 - Cleaning Data
 
-Cleaning Data
+<small>
 
-## Material 4
+::: {.column width="50%"}
+-   Combine all sheets into one table with `load_tsvData()` + `map_dfr()`
+-   Fix column type for `-log10(masked_p)` via `col_spec`
+-   Derive **MultimerFrequency per sample** from frequency column (`...33`)
+-   Drop non-data rows: remove rows with missing `barcode`
+-   Keep only analysis-relevant variables
+-   Create a simple `sampleID`, clean `HLA`, and tidy `Protein` names
+:::
+::: {.column width="50%"}
+```{r}
+#|eval: false
+#| warning: false
+#| echo: true
 
-Augment Data
+# Define data folder and list patient files --------------------------------
+tsv_folder <- here("data", "sheets_tsv")
+
+patient_files <- list.files(
+  path = tsv_folder
+)
+
+
+# Define correct spec for column which raised error ------------------------
+col_spec <- cols(
+  `-log10(masked_p)` = col_double()
+)
+
+```
+
+
+```{r}
+#| echo: true
+#| eval: true
+combined_data <- patient_files |> 
+  map_dfr( 
+    ~load_tsvData( 
+      filename = .x, 
+      folder = tsv_folder, 
+      col_types = col_spec, 
+      na = c("NA", "N/A", "---"), 
+      show_col_types = FALSE 
+      ) 
+    ) |> 
+  group_by(sample) |> 
+  rename(freq = ...33) |> 
+  mutate(
+    MultimerFrequency = sum(replace_na(freq, 0))) |>
+  ungroup() |> 
+  drop_na(barcode)
+
+clean_data <- combined_data |> 
+  select( 
+    sample, count.1, input.1, input.2, input.3,
+    log_fold_change, p, HLA, Protein, Peptide,
+    MultimerFrequency ) |> 
+  mutate( 
+    sampleID = str_remove(sample, "_.*$"), 
+    sampleID = str_sub(sampleID, start = 3, end = 4), 
+    HLA = str_remove(HLA, "HLA-") )
+
+
+```
+:::
+
+</small>
+
+## Material 4 - Augment Data
+
+<small>
+
+::: {.column width="50%"}
+From cleaned dataset `02_data_clean.tsv`
+
+Add **HLA–peptide identifier**: `HLA-peptide`
+
+Define **binary response**: `log_fold_change >= 2` and `p < 0.05` → response = 1
+
+Compute **response_count per sample**: sum of `count.1` for responses
+
+Estimate **peptide frequency per sample**:
+
+-   `estimated_frequency` for responding rows:
+    -   `count.1 / response_count * MultimerFrequency`
+-   non-responders or no responses → 0
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: true
+aug_data <- clean_data |>
+  mutate(`HLA-peptide` = paste(HLA, Peptide, sep = "-")) |>
+  mutate(
+    response = if_else(
+      log_fold_change >= 2.0 & p < 0.05,
+      1L, 0L
+    )
+  ) |>
+  group_by(sample) |>
+  mutate(response_count = sum(count.1 * response)) |>
+  ungroup() |>
+  mutate(
+    estimated_frequency = case_when(
+      response_count == 0 ~ 0,
+      response == 1 ~ (count.1 / response_count) * MultimerFrequency,
+      TRUE ~ 0
+    )
+  ) |>
+  group_by(sample) |>
+  mutate(total_estimated_frequency = sum(estimated_frequency)) |>
+  ungroup()
+```
+:::
+
+</small>
 
 ## Results and discussion 1
 
