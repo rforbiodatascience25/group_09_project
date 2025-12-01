@@ -101,6 +101,7 @@ sheet_list|>
 -   Keep only analysis-relevant variables
 -   Create a simple `sampleID`, clean `HLA`, and tidy `Protein` names
 :::
+
 ::: {.column width="50%"}
 ```{r}
 #|eval: false
@@ -121,7 +122,6 @@ col_spec <- cols(
 )
 
 ```
-
 
 ```{r}
 #| echo: true
