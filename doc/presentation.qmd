@@ -204,7 +204,7 @@ aug_data <- clean_data |>
 
 </small>
 
-## T cell responses across HLAs {.scrollable}
+## T cell responses against SARS-CoV-2 antigens
 
 ```{r}
 experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
@@ -220,158 +220,9 @@ protein_colors <- c(
   "E" = "#0072B2",
   "M" =  "#E69F00",
   "N" = "#5A61FF"
-)  
-
-extras <- experiment_data |>
-  mutate(
-    point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
-    point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
-    HLA = factor(HLA, levels = c("A01:01","A02:01","A03:01","A24:02", "B07:02", "B08:01", "B15:01")))
+)
 ```
 
-```{r}
-#how many peptides per HLA for positive T-responses
-extract_data <- 
-  experiment_data|>
-  mutate(HLA = str_remove(HLA, ":"))|>
-  filter(response ==1)|>
-  group_by(HLA)|>
-  summarize(peptidesPerHLA = n_distinct(Peptide))|>
-  ungroup()|>
-  #order HLA descending + fixes appearance for plotting
-  arrange(desc(HLA)) |> 
-  mutate(HLA = fct_inorder(HLA))
-
-#compute all peptides per HLA independent of positive/negative T-responses
-totalPeptidesPerHLA <- experiment_data|>
-  group_by(HLA)|>
-  summarize(totalPeptidesPerHLA = n_distinct(Peptide)) |> 
-  arrange(desc(HLA)) |> 
-  #also need the same order for combining correct values
-  mutate(HLA = fct_inorder(HLA)) |>
-  pull(totalPeptidesPerHLA)
-
-
-
-
-```
-
-. . .
-
-```{r}
-extras |> 
-    ggplot(aes(
-    x = `HLA-peptide`,
-    y = log_fold_change,
-    colour = point_color,
-    fill   = point_fill,
-    size = estimated_frequency
-  )) +
-  geom_point() +
-
-  facet_grid(~ HLA, scales = "free_x", space = "free") +
-  geom_hline(yintercept = 2, linetype = "dashed") +
-  scale_color_identity(guide = "none") +   
-  scale_fill_identity(guide = "none") +
-  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 14, by = 2)) +
-  #scale_y_break(breaks = c(0, 2)) +
- theme(
-  panel.spacing = unit(0, "lines"),  
-  panel.border = element_rect(colour = "grey", fill = NA, size = 0.3),
-  strip.text = element_text(angle = 90, hjust = 0.5, size = 10, face = "bold"),
-  legend.position = "bottom",
-   axis.text.y.right = element_blank(),
-  axis.ticks.y.right = element_blank(),
-  strip.background = element_blank(),
-  axis.text.x = element_blank(),
-  axis.text.y.left = element_text(size = 12),
-  title = element_text(size = 12),
-    legend.title = element_text(size = 10)
-
-   ) +
-
-  labs(title = "Manhattan plot showing T cell responses against SARS-CoV-2 peptides across patients, by HLAs",
-       x = "Peptide HLA pairs",
-       y = "Log fold change",
-       size = "Estimated frequency"
-) 
-
-```
-
-. . .
-
-::: columns
-::: {.column width = "70%"}
-
-```{r}
-
-pl1 <- extract_data |>
-  ggplot(
-    aes(x= peptidesPerHLA, 
-        y = HLA)
-  ) + 
-  geom_col(aes(width = 0.5), 
-           fill = "navy")+
-  geom_text(aes(label = peptidesPerHLA), hjust = -0.2)+
-  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
-  labs(caption = "Number of HLA-specific\nSARS-CoV-2 epitopes")+
-  theme(aspect.ratio = 2/1, 
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank(), 
-        axis.ticks = element_line(color = "black"),
-        axis.line = element_line(color = "black"),    
-        panel.background = element_rect(fill = "white"),
-        plot.caption = element_text(size = 12)
-  )
-
-pl2 <- extract_data |>
-  mutate(
-    percentage_peptides = peptidesPerHLA/totalPeptidesPerHLA * 100
-  )|>
-
-   ggplot(
-    aes(x= percentage_peptides, 
-        y = HLA)
-  ) + 
-  geom_col(aes(width = 0.5), 
-           fill = "navy")+
-  geom_text(aes(label = round(percentage_peptides, digits = 1)), 
-            hjust = -0.2)+
-  scale_x_continuous(expand = expansion(mult = c(0,.2)))+
-  labs(caption = "Immunogenic peptides\n (%, normalized)")+
-  theme(aspect.ratio = 2/1, 
-        axis.title.x = element_blank(), 
-        axis.title.y = element_blank(), 
-        axis.text.y  = element_blank(),
-        axis.ticks = element_line(color = "black"),
-        axis.line = element_line(color = "black"),    
-        panel.background = element_rect(fill = "white"),
-    plot.caption = element_text(size = 12)
-  )
-
-
-
-combined <- pl1 | pl2 +
-  plot_annotation(
-    title = "Summary of HLA frequency for tested peptides",
-    tag_levels = "A",
-    theme = theme(
-      plot.title = element_text(size = 14, hjust = 0.5)  # title size and alignment
-    )
-  )
-
-print(combined)
-```
-:::
-
-::: {.column width="30%"}
-
-The most immunogenic HLA in this cohort appears to be HLA-A:0201.
-
-:::
-:::
-
-## Which protein generates the most immunogenic antigens? {.scrollable}
 
 ```{r}
 extras <- experiment_data |>
@@ -381,10 +232,15 @@ extras <- experiment_data |>
     Protein = factor(Protein, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
 ```
 
-. . .
 
-```{r}
-  
+```{r dpi= 200}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "80%"
 extras |> 
     ggplot(aes(
     x = `HLA-peptide`,
@@ -410,9 +266,9 @@ extras |>
   axis.ticks.y.right = element_blank(),
   strip.background = element_blank(),
   axis.text.x = element_blank(),
-  axis.text.y.left = element_text(size = 12),
-  title = element_text(size = 12),
-    legend.title = element_text(size = 10)
+  axis.text.y.left = element_text(size = 14),
+  title = element_text(size = 16),
+    legend.title = element_text(size = 14)
 
    ) +
 
@@ -423,12 +279,16 @@ extras |>
 ) 
 ```
 
-. . .
 
-::: columns
-:::{.column width = "70%"}
+## Antigen distribution across proteins {.smaller}
 
-```{r}
+
+```{r dpi= 200}
+#| fig-align: center
+#| fig-width: 16
+#| fig-height: 9
+#| out-width: "100%"
+
 extract_data <- experiment_data|>
   group_by(Protein)|>
       summarize(total = n_distinct(`HLA-peptide`),
@@ -487,14 +347,9 @@ combined <- pl1 | pl2 +
 
 combined
 ```
-:::
 
-::: {.column width="30%"}
+By applying a normalization on the total number of peptides tested per protein, we identify ORF3 as the one with the highest relative immunogenicity. 
 
-Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
-
-:::
-:::
 
 ## Immunogenic Epitopes Distribution {.smaller}
 
