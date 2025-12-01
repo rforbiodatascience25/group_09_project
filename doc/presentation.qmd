@@ -1,14 +1,5 @@
 ---
 title: "Project Presentation - Group 09"
-<<<<<<< HEAD
-format: revealjs
-incremental: true
-slide-level: 2
----
-
-
-## Introduction \# 1
-=======
 format: 
   revealjs:
     slide-number: c
@@ -16,49 +7,36 @@ format:
 ---
 
 ## Introduction
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
 
 Where does the data come from?
 
-<<<<<<< HEAD
-
-
-## Introduction #2
-=======
 ![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](barcoding.png){fig-align="center"}
 
 ## Introduction
 
 ![Focus on mapping complete SARS-CoV-2 genome](COVID_structure.png){fig-align="right" width="1500"}
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
 
+## Materials - Raw Data
 
-
-## Materials and Methods #1 - Raw Data
-
-::: {style="text-align:center; margin-bottom:0.2em;"}
-![](Raw_data.png){width="80%"}
+::: {style="text-align:center; margin-bottom:-10px;"}
+![](Raw_data.png){width="100%"}
 :::
 
 ::::::: columns
 :::: {.column width="30%"}
-::: {style="text-align:center;"}
-![](Raw_data_PEPercentage.png){width="50%"}
+::: {style="text-align:center; margin-top: -10px"}
+![](Raw_data_PEPercentage.png){width="40%"}
 :::
 ::::
 
 :::: {.column width="70%"}
-::: {style="text-align:center;"}
+::: {style="text-align:center; magrin-top: -10px"}
 ![](Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
-<<<<<<< HEAD
 
-=======
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
-
-## Materials 2 -Loading Data
+## Methods -Loading Data
 
 ```{r}
 #| eval: true
@@ -67,16 +45,10 @@ Where does the data come from?
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
 library(here)       # reproducible file paths
-<<<<<<< HEAD
 library(purrr)
 source(here("R", "99_proj_func.R"))
 library(patchwork)
 # functional programming: map(), imap()
-=======
-library(purrr)      # functional programming: map(), imap()
-# Load project helper functions -----------------------------------
-source(here("R", "99_proj_func.R"))  # load_tsvData(), save_tsvData(), etc.
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
 ```
 
 <small>
@@ -115,19 +87,10 @@ sheet_list|>
 
 </small>
 
-<<<<<<< HEAD
-
-## Materials 3
-=======
-## Materials 3 - Cleaning Data
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
+## Methods - Cleaning Data
 
 <small>
 
-<<<<<<< HEAD
-
-## Material 4
-=======
 ::: {.column width="50%"}
 -   Combine all sheets into one table with `load_tsvData()` + `map_dfr()`
 -   Fix column type for `-log10(masked_p)` via `col_spec`
@@ -136,7 +99,6 @@ sheet_list|>
 -   Keep only analysis-relevant variables
 -   Create a simple `sampleID`, clean `HLA`, and tidy `Protein` names
 :::
->>>>>>> 60d25fb47f36f214f71a4c14bfefda25385edb7d
 
 ::: {.column width="50%"}
 ```{r}
@@ -195,7 +157,7 @@ clean_data <- combined_data |>
 
 </small>
 
-## Material 4 - Augment Data
+## Methods - Augment Data
 
 <small>
 
@@ -243,7 +205,6 @@ aug_data <- clean_data |>
 :::
 
 </small>
-
 
 ## T cell responses across HLAs {.scrollable}
 
@@ -338,9 +299,10 @@ extras |>
 ) 
 
 ```
+
 . . .
 
-:::: {.columns}
+::: columns
 ::: {.column width = "70%"}
 
 ```{r}
@@ -406,10 +368,7 @@ print(combined)
 
 ::: {.column width = "30%"}
 
-The most immunogenic HLA in this cohort appears to be HLA-A:0201.
-::: 
-::::
-
+The most immunogenic HLA in this cohort appears to be HLA-A:0201. ::: ::::
 
 ## Which protein generates the most immunogenic antigens? {.scrollable}
 
@@ -465,8 +424,7 @@ extras |>
 
 . . .
 
-:::: {.columns}
-
+::: columns
 :::{.column width = "70%"}
 
 ```{r}
@@ -530,14 +488,11 @@ combined
 ```
 :::
 
- 
 :::{.column width = "30%"}
 
-<div style= "font-size: 22px;">
-
+::: {style="font-size: 22px;"}
 Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
-
-</div>
+:::
 
 :::
 
@@ -546,8 +501,6 @@ Although ORF1 produced the most peptides, the most immunogenic protein, relative
 ## Results 3
 
 Ivan - figure 1I
-
-
 
 ## Results 4
 
