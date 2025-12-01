@@ -103,7 +103,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="load-data" class="level1">
 <h1>1. Load Data</h1>
 <hr>
-<p>Script: <strong>01_load.R</strong></p>
+<p>Script: <strong>01_load.qmd</strong></p>
 <p><strong>Purpose</strong>: Load raw Excel data (multiple sheets) and export each sheet as an individual TSV file.</p>
 <p><strong>Why</strong>: Converting each sheet into its own flat text file makes downstream wrangling easier, more modular, and reproducible.</p>
 <hr>
@@ -144,7 +144,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="clean-data" class="level1">
 <h1>2. Clean Data</h1>
 <hr>
-<p>Script: <strong>02_clean.R</strong></p>
+<p>Script: <strong>02_clean.qmd</strong></p>
 <p><strong>Purpose</strong>: Combine per-sheet TSV files, clean and tidy the data, and create the key variables for analysis.</p>
 <p><strong>Why</strong>: We want a single, tidy table that is easy to use in downstream analyses and visualisations.</p>
 <p><strong>Input</strong>: TSV files in <em>data/sheets_tsv/(one per sheet)</em>.</p>
@@ -300,7 +300,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="augment-data" class="level1">
 <h1>3. Augment Data</h1>
 <hr>
-<p>Script: <strong>03_augment.R</strong></p>
+<p>Script: <strong>03_augment.qmd</strong></p>
 <p><strong>Purpose</strong>: Add derived variables (e.g.&nbsp;HLA–peptide combo, response flag, estimated frequencies) on top of the cleaned dataset.</p>
 <p><strong>Why</strong>: These features are needed for downstream immunological interpretation and analyses.</p>
 <p><strong>Input</strong>: 02_dat_clean.tsv</p>
@@ -405,7 +405,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="analysis" class="level1">
 <h1>4. Analysis</h1>
 <hr>
-<p>Script: <strong>05_analysis_1.R</strong></p>
+<p>Script: <strong>04_analysis.qmd</strong></p>
 <p><strong>Purpose</strong>: Analyse the how the peptides are distributed over HLA, Protein and patients</p>
 <p><strong>Input</strong>: 03_dat_aug.tsv</p>
 <hr>

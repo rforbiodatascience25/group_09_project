@@ -207,7 +207,7 @@ aug_data <- clean_data |>
 ## T cell responses across HLAs {.scrollable}
 
 ```{r}
-experiment_data <- load_tsvData("03_data_augment.tsv", show_col_types = FALSE)
+experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
 
 protein_colors <- c(
   "ORF1" = "#009E73",
@@ -265,7 +265,7 @@ extras |>
     y = log_fold_change,
     colour = point_color,
     fill   = point_fill,
-    size = estimatedFrequency
+    size = estimated_frequency
   )) +
   geom_point() +
 
@@ -388,7 +388,7 @@ extras |>
     y = log_fold_change,
     colour = point_color,
     fill   = point_fill,
-    size = estimatedFrequency
+    size = estimated_frequency
   )) +
   geom_point() +
 
