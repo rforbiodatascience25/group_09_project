@@ -364,9 +364,12 @@ print(combined)
 ```
 :::
 
-::: {.column width = "30%"}
+::: {.column width="30%"}
 
-The most immunogenic HLA in this cohort appears to be HLA-A:0201. ::: :::
+The most immunogenic HLA in this cohort appears to be HLA-A:0201.
+
+:::
+:::
 
 ## Which protein generates the most immunogenic antigens? {.scrollable}
 
@@ -486,9 +489,12 @@ combined
 ```
 :::
 
-:::{.column width = "30%"}
+::: {.column width="30%"}
 
-Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3. ::: :::
+Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3.
+
+:::
+:::
 
 ## Immunogenic Epitopes Distribution {.smaller}
 
