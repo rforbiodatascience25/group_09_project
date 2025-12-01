@@ -10,11 +10,11 @@ format:
 
 Where does the data come from?
 
-![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](images/Barcoding (2).png){fig-align="center"}
+![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](images/Barcoding%20(2).png){fig-align="center"}
 
 ## Introduction
 
-![Focus on mapping complete SARS-CoV-2 genome](images/SARS-CoV-2 Structure .png){fig-align="center"}
+![Focus on mapping complete SARS-CoV-2 genome](images/SARS-CoV-2%20Structure%20.png){fig-align="center"}
 
 ## Materials - Raw Data
 
@@ -38,7 +38,7 @@ Where does the data come from?
 ::::
 :::::::
 
-## Methods -Loading Data
+## Methods - Loading Data
 
 ```{r}
 #| eval: true
@@ -488,7 +488,9 @@ combined
 
 :::{.column width = "30%"}
 
-Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3. ::: ::: \## Immunogenic Epitopes Distribution {.smaller}
+Although ORF1 produced the most peptides, the most immunogenic protein, relative to its size, is ORF3. ::: :::
+
+## Immunogenic Epitopes Distribution {.smaller}
 
 We analyzed T-cell responses across the viral genome per patient. **ORF1** dominates due to its size, but **Spike** and **Nucleocapsid** remain major targets.
 
