@@ -7,7 +7,7 @@ format: html
 
 ------------------------------------------------------------------------
 
-Script: **05_analysis_1.R**
+Script: **04_analysis.qmd**
 
 **Purpose**: Analyse the how the peptides are distributed over HLA, Protein and patients
 
