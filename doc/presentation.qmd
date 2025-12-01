@@ -1,6 +1,9 @@
 ---
 title: "Project Presentation - Group 09"
-format: revealjs
+format: 
+  revealjs:
+    slide-number: c
+    show-slide-number: all
 ---
 
 ## Introduction
@@ -8,12 +11,6 @@ format: revealjs
 Where does the data come from?
 
 ![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](barcoding.png){fig-align="center"}
-
-## Introduction
-
-Where does the data come from?
-
-![](barcoding_zoom.png){fig-align="left" width="2300"}
 
 ## Introduction
 
@@ -101,6 +98,7 @@ sheet_list|>
 -   Keep only analysis-relevant variables
 -   Create a simple `sampleID`, clean `HLA`, and tidy `Protein` names
 :::
+
 ::: {.column width="50%"}
 ```{r}
 #|eval: false
@@ -121,7 +119,6 @@ col_spec <- cols(
 )
 
 ```
-
 
 ```{r}
 #| echo: true
@@ -183,7 +180,7 @@ Estimate **peptide frequency per sample**:
 ```{r}
 #| echo: true
 aug_data <- clean_data |>
-  mutate(`HLA-peptide` = paste(HLA, Peptide, sep = "-")) |>
+  mutate(`HLA-peptide` = str_c(HLA, Peptide, sep = "-")) |>
   mutate(
     response = if_else(
       log_fold_change >= 2.0 & p < 0.05,
