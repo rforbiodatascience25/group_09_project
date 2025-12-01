@@ -7,7 +7,7 @@ format: html
 
 ------------------------------------------------------------------------
 
-Script: **03_augment.R**
+Script: **03_augment.qmd**
 
 **Purpose**: Add derived variables (e.g. HLA–peptide combo, response flag, estimated frequencies) on top of the cleaned dataset.
 
