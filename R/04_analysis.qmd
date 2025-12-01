@@ -142,8 +142,7 @@ pl1 <- summary_HLA |>
     aes(x= peptidesPerHLA, 
         y = HLA)
   ) + 
-  geom_col(aes(width = 0.5), 
-           fill = "darkblue")+
+  geom_col(fill = "darkblue")+
   geom_text(aes(label = peptidesPerHLA), hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
   labs(caption = "Number of HLA-specific\nSARS-CoV-2 epitopes")+
@@ -165,8 +164,7 @@ pl2 <- summary_HLA |>
     aes(x= percentage_peptides, 
         y = HLA)
   ) + 
-  geom_col(aes(width = 0.5), 
-           fill = "darkblue")+
+  geom_col(fill = "darkblue")+
   geom_text(aes(label = round(percentage_peptides, digits = 1)), 
             hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
@@ -263,7 +261,7 @@ pl1 <- summary_protein |>
         y = Protein,
         fill = Protein)
   )+
-  geom_col(aes(width = 0.5))+
+  geom_col()+
   scale_fill_manual(values  = protein_colors) +
   geom_text(aes(label = number_Tcells),hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+
@@ -288,7 +286,7 @@ pl2 <- summary_protein |>
         y = Protein,
         fill = Protein)
   )+
-  geom_col(aes(width = 0.5))+
+  geom_col()+
   scale_fill_manual(values  = protein_colors) +
   geom_text(aes(label = round(percentage_peptides, digits = 1)),hjust = -0.2)+
   scale_x_continuous(expand = expansion(mult = c(0,.2)))+

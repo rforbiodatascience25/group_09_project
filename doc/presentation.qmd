@@ -4,6 +4,7 @@ format:
   revealjs:
     slide-number: c
     show-slide-number: all
+    
 ---
 
 ## Introduction
@@ -21,19 +22,19 @@ Where does the data come from?
 [Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a>]{style="font-size:0.6em; color:gray; margin-top:-20px;"}
 
 ::: {style="text-align:center; margin-bottom:-20px; margin-top: -20px"}
-![](Raw_data.png){width="100%"}
+![](images/Raw_data.png){width="100%"}
 :::
 
 ::::::: columns
 :::: {.column width="30%"}
 ::: {style="text-align:center; margin-top: -20px"}
-![](Raw_data_PEPercentage.png){width="40%"}
+![](images/Raw_data_PEPercentage.png){width="40%"}
 :::
 ::::
 
 :::: {.column width="70%"}
 ::: {style="text-align:center; margin-top: -20px"}
-![](Raw_data_lastRow.png){width="90%"}
+![](images/Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
@@ -173,6 +174,7 @@ Estimate **peptide frequency per sample**:
 -   `estimated_frequency` for responding rows:
     -   `count.1 / response_count * MultimerFrequency`
 -   non-responders or no responses → 0
+
 :::
 
 ::: {.column width="50%"}
@@ -204,14 +206,16 @@ aug_data <- clean_data |>
 
 </small>
 
+
 ## T cell responses against SARS-CoV-2 antigens
+
 
 ```{r}
 experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
-
+ 
 protein_colors <- c(
   "ORF1" = "#009E73",
-  "S" = "#56B4E9",  
+  "S" = "#56B4E9",
    "ORF3"= "#D55E00",
   "ORF6" = "#CC79A7",
   "ORF7" = "#00AFAA",
@@ -220,11 +224,8 @@ protein_colors <- c(
   "E" = "#0072B2",
   "M" =  "#E69F00",
   "N" = "#5A61FF"
-)
-```
+)  
 
-
-```{r}
 extras <- experiment_data |>
   mutate(
     point_color = if_else(response == 0, "grey",protein_colors [Protein]),     
@@ -289,6 +290,7 @@ extras |>
 #| fig-height: 9
 #| out-width: "100%"
 
+
 extract_data <- experiment_data|>
   group_by(Protein)|>
       summarize(total = n_distinct(`HLA-peptide`),
@@ -347,6 +349,7 @@ combined <- pl1 | pl2 +
 
 combined
 ```
+
 
 By applying a normalization on the total number of peptides tested per protein, we identify ORF3 as the one with the highest relative immunogenicity. 
 

@@ -21,6 +21,8 @@ Script: **01_load.qmd**
 
 
 # Load libraries -----------------------------------------------------------
+#| warning: false
+#| echo: false
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
 library(here)       # reproducible file paths
