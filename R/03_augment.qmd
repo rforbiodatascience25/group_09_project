@@ -1,7 +1,9 @@
 ---
-title: "03_augment"
+#title: "Augment Data"
 format: html
 ---
+
+# 3. Augment Data
 
 ------------------------------------------------------------------------
 
@@ -18,28 +20,29 @@ Script: **03_augment.R**
 ------------------------------------------------------------------------
 
 ```{r}
-# Load libraries ------------------------------------------------------------
 #| warning: false
+#| message: false
+
+# Load libraries ------------------------------------------------------------
 library(tidyverse)  # data wrangling, summaries, etc.
 library(here)       # reproducible file paths
 ```
 
 ```{r}
+#| message: false
+
 # Load helper functions -----------------------------------------------------
 source("99_proj_func.R")
 ```
 
-Load data
-
 ```{r}
+# Load cleaned data ------------------------------------------------------------
 clean_data <- load_tsvData("02_data_clean.tsv", show_col_types = FALSE)
-
-clean_data
 ```
 
-Create new columns
+## Create new columns
 
-HLA-peptides (HLA-peptide combination)
+### HLA-peptides (HLA-peptide combination)
 
 ```{r}
 # Create HLA–peptide combination -------------------------------------------
@@ -50,10 +53,9 @@ aug_data <- clean_data |>
     'HLA-peptide' = str_c(HLA, Peptide, sep = "-")
   )
 
-aug_data
 ```
 
-Identify response by log_fold_change and p-value
+### Identify response by log_fold_change and p-value
 
 ```{r}
 # Define response based on logFC and p-value --------------------------------
@@ -70,7 +72,7 @@ aug_data <- aug_data |>
   )
 ```
 
-Estimated Frequency (based on the authors:
+### Estimated frequency
 
 -   count.1 / (sum of count.1 for Responses) \* multimer Frequency
 
@@ -91,8 +93,9 @@ aug_data <- aug_data |>
     )
   )
 
-aug_data
 ```
+
+### Total estimated frequency
 
 ```{r}
 # Check total estimated frequency per sample --------------------------------
@@ -105,10 +108,11 @@ aug_data <- aug_data |>
   ) |>
   ungroup()
 
-aug_data
+# Optional: inspect augmented data
+#aug_data
 ```
 
-Write 03_dat_aug file
+## Save augmented data as TSV
 
 ```{r}
 # Save augmented data -------------------------------------------------------

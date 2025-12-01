@@ -1,29 +1,50 @@
 ---
-title: "05_analysis_1"
+#title: "Analysis"
 format: html
 ---
 
-## Load the libraries
+# 4. Analysis
+
+------------------------------------------------------------------------
+
+Script: **05_analysis_1.R**
+
+**Purpose**: Analyse the how the peptides are distributed over HLA, Protein and patients
+
+**Input**: 03_dat_aug.tsv
+
+------------------------------------------------------------------------
 
 ```{r}
+#| warning: false
+#| message: false
+
+# Load libraries ------------------------------------------------------------
 library("here")
 library("tidyverse")
 library("patchwork")
 ```
 
 ```{r}
+#| warning: false
+#| message: false
+
+# Load helper functions -----------------------------------------------------
 source("99_proj_func.R")
 ```
 
-## Load data
-
 ```{r}
+# Load augmented data -----------------------------------------------------
 experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
 ```
 
-# Manhattan plot: Immunogenic peptides, sorted by HLAs
+## Manhattan plot: Immunogenic peptides, sorted by HLAs
 
-```{r, fig.width= 11, fig.height= 6, dpi = 200}
+```{r}
+#| warning: false
+#| fig.width: 11
+#| fig.height: 6
+#| dpi: 200
 
 protein_colors <- c(
   "ORF1" = "#009E73",
@@ -88,7 +109,7 @@ manhattan_HLA |>
 
 In this plot, we can appreciate the distribution of immunogenic peptides across different HLAs, by displaying the estimated frequency of each peptide-HLA pair in the patient cohort.
 
-# Summary bar plot: Peptides distribution across HLAs
+## Summary bar plot: Peptides distribution across HLAs
 
 ```{r}
 
@@ -171,9 +192,13 @@ combined_HLAs
 The plot compares, for each HLA, the total number of distinct SARS-CoV-2 peptides that had a positive T-cell response. The right panel shows the percentage of immunogenic peptides normalized to the total peptide number of each HLA.\
 This highlights the absolute and relative immunogenicity of different HLA types.
 
-# Manhattan plot: Immunogenic peptides, sorted by protein of origin
+## Manhattan plot: Immunogenic peptides, sorted by protein of origin
 
-```{r, fig.width= 11, fig.height= 6, dpi= 200}
+```{r}
+#| warning: false
+#| fig.width: 11
+#| fig.height: 6
+#| dpi: 200
 
 manhattan_protein <- experiment_data |>
   mutate(
@@ -223,7 +248,7 @@ manhattan_protein |>
 
 This plot gives an overview of how immunogenic peptides are spread across various proteins of origin, keeping into account their estimated frequency in the patient cohort.
 
-# Summary bar plot: peptides distribution across protein of origin
+## Summary bar plot: peptides distribution across protein of origin
 
 ```{r}
 summary_protein <- experiment_data|>
@@ -288,11 +313,18 @@ combined_protein
 The plot compares, for each SARS-CoV-2 protein, the total number of HLA-peptide combination that resulted in a positive T-cell response. The right panel shows the percentage of immunogenic peptides relative to all detected peptides of that protein.\
 This highlights the absolute and relative immunogenicity of different proteins.
 
-# Patient-based distributions of peptides across proteins of origin
+## Patient-based distributions of peptides across proteins of origin
 
 It is interesting to assess how different genes from SARS-CoV-2 genome contribute in generating immunogenic epitopes, for each patient in the cohort. To do this, we will plot the total frequency of T cell responses for each patient, distributed across the whole genome.
 
-```{r, fig.width= 11, fig.height= 6, dpi = 200}
+```{r}
+#| warning: false
+#| fig.width: 11
+#| fig.height: 6
+#| dpi: 200
+
+
+
 patient_protein <- experiment_data |>
   mutate(estimated_frequency = estimated_frequency*100, #converts into percentage
          total_estimated_frequency = total_estimated_frequency*100,
@@ -313,7 +345,7 @@ ggplot(aes(x = estimated_frequency,
 
 As shown here, for most samples, the majority of reactive T cells recognize antigens derived from ORF1. Taking into account the size of the genes, hence the amount of peptides that can be generated, it is reasonable to witness a bigger response against bigger genes (such as ORF1).
 
-# Identifying immunodominant peptides
+## Identifying immunodominant peptides
 
 At last, we are interested in identifying which peptides are conserved across patients, keeping in mind the restrictions guided by HLA haplotypes. We will define immunodominant, those peptide-HLA for which a T cell population was identified in \>= 50 % of the patients carrying given HLA.
 
@@ -328,30 +360,10 @@ Identifying these "immunodominant" epitopes is crucial for **vaccine design**, a
 The bar plot below shows the **Prevalence** of the top immunodominant peptides within their respective HLA groups.
 
 ```{r}
-#| label: plot-ivan
-#| fig-width: 10
-#| fig-height: 8
-
-# --- Pre-processing for Ivan's plots ---
-# Ensure we have consistent column names and a binary response variable
-df_analysis <- experiment_data
-
-if("sampleID" %in% names(df_analysis)) df_analysis <- rename(df_analysis, patient_id = sampleID)
-if("Protein" %in% names(df_analysis))  df_analysis <- rename(df_analysis, ORF = Protein)
-if("Peptide" %in% names(df_analysis))  df_analysis <- rename(df_analysis, peptide = Peptide)
-if("HLA" %in% names(df_analysis))      df_analysis <- mutate(df_analysis, HLA = str_remove(HLA, "HLA-"))
-
-# Create response_binary if missing (p < 0.05)
-if(!"response_binary" %in% names(df_analysis)) {
-  if("p" %in% names(df_analysis)) {
-      df_analysis <- df_analysis %>% mutate(response_binary = if_else(p < 0.05, 1, 0))
-  }
-}
-
-
-```
-
-```{r}
+#| warning: false
+#| fig.width: 10
+#| fig.height: 8
+#| dpi: 200
 
 # --- Calculation ---
 # 1. Calculate Prevalence per HLA

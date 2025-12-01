@@ -1,9 +1,9 @@
 ---
-title: "01_load"
+#title: "Load Data"
 format: html
 ---
 
-# Load raw data
+# 1. Load Data
 
 ------------------------------------------------------------------------
 
@@ -16,6 +16,10 @@ Script: **01_load.R**
 ------------------------------------------------------------------------
 
 ```{r}
+#| warning: false
+#| message: false
+
+
 # Load libraries -----------------------------------------------------------
 library(readxl)     # reading Excel files
 library(tidyverse)  # tidy data tools including write_tsv()
@@ -24,6 +28,9 @@ library(purrr)      # functional programming: map(), imap()
 ```
 
 ```{r}
+#| message: false
+#| warning: false
+
 # Load Excel file ----------------------------------------------------------
 # Dynamically build path so the script works on any machine
 raw_file_path <- here("data", "_raw", "AP_cohort_COVID_1_raw.xlsx")
@@ -37,6 +44,7 @@ names(sheet_list) <- sheet_names
 ```
 
 ```{r}
+#| results: hide
 # Export sheets to TSV files -----------------------------------------------
 # Create output directory (if it doesn’t exist yet)
 out_dir <- here("data", "sheets_tsv")
