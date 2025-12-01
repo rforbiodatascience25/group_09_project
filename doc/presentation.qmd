@@ -4,7 +4,6 @@ format:
   revealjs:
     slide-number: c
     show-slide-number: all
-    
 ---
 
 ## Introduction
@@ -92,9 +91,7 @@ sheet_list|>
 
 ::: {.column width="50%"}
 -   Combine all sheets into one table with `load_tsvData()` + `map_dfr()`
--   Fix column type for `-log10(masked_p)` via `col_spec`
--   Derive **MultimerFrequency per sample** from frequency column (`...33`)
--   Drop non-data rows: remove rows with missing `barcode`
+-   Derive **MultimerFrequency per sample**
 -   Keep only analysis-relevant variables
 -   Create a simple `sampleID`, clean `HLA`, and tidy `Protein` names
 :::
@@ -161,20 +158,13 @@ clean_data <- combined_data |>
 <small>
 
 ::: {.column width="50%"}
-From cleaned dataset `02_data_clean.tsv`
-
-Add **HLA–peptide identifier**: `HLA-peptide`
-
-Define **binary response**: `log_fold_change >= 2` and `p < 0.05` → response = 1
-
-Compute **response_count per sample**: sum of `count.1` for responses
+Define **binary response**: `log_fold_change >= 2` and `p < 0.05` → response =
 
 Estimate **peptide frequency per sample**:
 
 -   `estimated_frequency` for responding rows:
     -   `count.1 / response_count * MultimerFrequency`
 -   non-responders or no responses → 0
-
 :::
 
 ::: {.column width="50%"}
@@ -206,9 +196,7 @@ aug_data <- clean_data |>
 
 </small>
 
-
 ## T cell responses against SARS-CoV-2 antigens
-
 
 ```{r}
 experiment_data <- load_tsvData("03_data_aug.tsv", show_col_types = FALSE)
@@ -232,7 +220,6 @@ extras <- experiment_data |>
     point_fill  = if_else(response == 0, "grey", protein_colors [Protein]),
     Protein = factor(Protein, levels = c("ORF1","S","ORF3","N", "M", "ORF8", "ORF7", "ORF6","ORF10", "E")))
 ```
-
 
 ```{r dpi= 200}
 #| echo: false
@@ -280,9 +267,7 @@ extras |>
 ) 
 ```
 
-
 ## Antigen distribution across proteins {.smaller}
-
 
 ```{r dpi= 200}
 #| fig-align: center
@@ -350,9 +335,7 @@ combined <- pl1 | pl2 +
 combined
 ```
 
-
-By applying a normalization on the total number of peptides tested per protein, we identify ORF3 as the one with the highest relative immunogenicity. 
-
+By applying a normalization on the total number of peptides tested per protein, we identify ORF3 as the one with the highest relative immunogenicity.
 
 ## Immunogenic Epitopes Distribution {.smaller}
 
