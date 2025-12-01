@@ -3,11 +3,21 @@ title: "Project Presentation - Group 09"
 format: revealjs
 ---
 
-## Introduction \# 1
+## Introduction
 
-One person, 2 slides. workflow and questions to answer. one of marta/tommaso\
+Where does the data come from?
 
-## Introduction #2
+![**Workflow for identification of T cells responses using DNA barcode p-MHC-I multimer technology**](barcoding.png){fig-align="center"}
+
+## Introduction
+
+Where does the data come from?
+
+![](barcoding_zoom.png){fig-align="left" width="2300"}
+
+## Introduction
+
+![Focus on mapping complete SARS-CoV-2 genome](COVID_structure.png){fig-align="right" width="1500"}
 
 ## Materials and Methods #1 - Raw Data
 
