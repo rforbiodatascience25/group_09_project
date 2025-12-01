@@ -4,6 +4,7 @@ format:
   revealjs:
     slide-number: c
     show-slide-number: all
+    
 ---
 
 ## Introduction
@@ -21,19 +22,19 @@ Where does the data come from?
 [Dataset from Saini et al., Science Immunology 2021. <a href="https://www.science.org/doi/10.1126/sciimmunol.abf7550" target="_blank">DOI</a>]{style="font-size:0.6em; color:gray; margin-top:-20px;"}
 
 ::: {style="text-align:center; margin-bottom:-20px; margin-top: -20px"}
-![](Raw_data.png){width="100%"}
+![](images/Raw_data.png){width="100%"}
 :::
 
 ::::::: columns
 :::: {.column width="30%"}
 ::: {style="text-align:center; margin-top: -20px"}
-![](Raw_data_PEPercentage.png){width="40%"}
+![](images/Raw_data_PEPercentage.png){width="40%"}
 :::
 ::::
 
 :::: {.column width="70%"}
 ::: {style="text-align:center; margin-top: -20px"}
-![](Raw_data_lastRow.png){width="90%"}
+![](images/Raw_data_lastRow.png){width="90%"}
 :::
 ::::
 :::::::
